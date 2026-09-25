@@ -1,0 +1,982 @@
+[
+ {
+  "player": {
+   "id": 9821,
+   "name": "Jahmyr Gibbs",
+   "sleeperId": "9221",
+   "mflId": "16162",
+   "position": "RB",
+   "maybeTeam": "DET"
+  },
+  "value": 10383,
+  "overallRank": 1,
+  "positionRank": 1,
+  "redraftValue": 10389
+ },
+ {
+  "player": {
+   "id": 9833,
+   "name": "Bijan Robinson",
+   "sleeperId": "9509",
+   "mflId": "16161",
+   "position": "RB",
+   "maybeTeam": "ATL"
+  },
+  "value": 9836,
+  "overallRank": 2,
+  "positionRank": 2,
+  "redraftValue": 9842
+ },
+ {
+  "player": {
+   "id": 9924,
+   "name": "Jaxon Smith-Njigba",
+   "sleeperId": "9488",
+   "mflId": "16185",
+   "position": "WR",
+   "maybeTeam": "SEA"
+  },
+  "value": 9618,
+  "overallRank": 3,
+  "positionRank": 1,
+  "redraftValue": 9684
+ },
+ {
+  "player": {
+   "id": 5856,
+   "name": "Ja'Marr Chase",
+   "sleeperId": "7564",
+   "mflId": "15281",
+   "position": "WR",
+   "maybeTeam": "CIN"
+  },
+  "value": 9060,
+  "overallRank": 4,
+  "positionRank": 2,
+  "redraftValue": 9122
+ },
+ {
+  "player": {
+   "id": 1749,
+   "name": "Kenneth Walker",
+   "sleeperId": "8151",
+   "mflId": "15711",
+   "position": "RB",
+   "maybeTeam": "KC"
+  },
+  "value": 8835,
+  "overallRank": 5,
+  "positionRank": 3,
+  "redraftValue": 8840
+ },
+ {
+  "player": {
+   "id": 1527,
+   "name": "Amon-Ra St. Brown",
+   "sleeperId": "7547",
+   "mflId": "15287",
+   "position": "WR",
+   "maybeTeam": "DET"
+  },
+  "value": 8795,
+  "overallRank": 6,
+  "positionRank": 3,
+  "redraftValue": 8856
+ },
+ {
+  "player": {
+   "id": 3046,
+   "name": "Jonathan Taylor",
+   "sleeperId": "6813",
+   "mflId": "14802",
+   "position": "RB",
+   "maybeTeam": "IND"
+  },
+  "value": 8690,
+  "overallRank": 7,
+  "positionRank": 4,
+  "redraftValue": 8695
+ },
+ {
+  "player": {
+   "id": 5494,
+   "name": "Christian McCaffrey",
+   "sleeperId": "4034",
+   "mflId": "13130",
+   "position": "RB",
+   "maybeTeam": "SF"
+  },
+  "value": 8371,
+  "overallRank": 8,
+  "positionRank": 5,
+  "redraftValue": 8376
+ },
+ {
+  "player": {
+   "id": 9822,
+   "name": "Puka Nacua",
+   "sleeperId": "9493",
+   "mflId": "16211",
+   "position": "WR",
+   "maybeTeam": "LAR"
+  },
+  "value": 7761,
+  "overallRank": 9,
+  "positionRank": 4,
+  "redraftValue": 7815
+ },
+ {
+  "player": {
+   "id": 4835,
+   "name": "CeeDee Lamb",
+   "sleeperId": "6786",
+   "mflId": "14832",
+   "position": "WR",
+   "maybeTeam": "DAL"
+  },
+  "value": 7497,
+  "overallRank": 10,
+  "positionRank": 5,
+  "redraftValue": 7549
+ },
+ {
+  "player": {
+   "id": 182,
+   "name": "James Cook",
+   "sleeperId": "8138",
+   "mflId": "15715",
+   "position": "RB",
+   "maybeTeam": "BUF"
+  },
+  "value": 7289,
+  "overallRank": 11,
+  "positionRank": 6,
+  "redraftValue": 7293
+ },
+ {
+  "player": {
+   "id": 5421,
+   "name": "Derrick Henry",
+   "sleeperId": "3198",
+   "mflId": "12626",
+   "position": "RB",
+   "maybeTeam": "BAL"
+  },
+  "value": 7254,
+  "overallRank": 12,
+  "positionRank": 7,
+  "redraftValue": 7258
+ },
+ {
+  "player": {
+   "id": 7569,
+   "name": "Justin Jefferson",
+   "sleeperId": "6794",
+   "mflId": "14836",
+   "position": "WR",
+   "maybeTeam": "MIN"
+  },
+  "value": 7054,
+  "overallRank": 13,
+  "positionRank": 6,
+  "redraftValue": 7103
+ },
+ {
+  "player": {
+   "id": 6170,
+   "name": "Josh Allen",
+   "sleeperId": "4984",
+   "mflId": "13589",
+   "position": "QB",
+   "maybeTeam": "BUF"
+  },
+  "value": 6777,
+  "overallRank": 14,
+  "positionRank": 1,
+  "redraftValue": 6772
+ },
+ {
+  "player": {
+   "id": 12612,
+   "name": "Ashton Jeanty",
+   "sleeperId": "12527",
+   "mflId": "17042",
+   "position": "RB",
+   "maybeTeam": "LV"
+  },
+  "value": 6726,
+  "overallRank": 15,
+  "positionRank": 8,
+  "redraftValue": 6730
+ },
+ {
+  "player": {
+   "id": 9967,
+   "name": "Chase Brown",
+   "sleeperId": "9224",
+   "mflId": "16181",
+   "position": "RB",
+   "maybeTeam": "CIN"
+  },
+  "value": 6270,
+  "overallRank": 16,
+  "positionRank": 9,
+  "redraftValue": 6274
+ },
+ {
+  "player": {
+   "id": 7325,
+   "name": "Trey McBride",
+   "sleeperId": "8130",
+   "mflId": "15794",
+   "position": "TE",
+   "maybeTeam": "ARI"
+  },
+  "value": 6132,
+  "overallRank": 17,
+  "positionRank": 1,
+  "redraftValue": 6286
+ },
+ {
+  "player": {
+   "id": 2548,
+   "name": "Chris Olave",
+   "sleeperId": "8144",
+   "mflId": "15754",
+   "position": "WR",
+   "maybeTeam": "NO"
+  },
+  "value": 5738,
+  "overallRank": 18,
+  "positionRank": 7,
+  "redraftValue": 5778
+ },
+ {
+  "player": {
+   "id": 7257,
+   "name": "Saquon Barkley",
+   "sleeperId": "4866",
+   "mflId": "13604",
+   "position": "RB",
+   "maybeTeam": "PHI"
+  },
+  "value": 5457,
+  "overallRank": 19,
+  "positionRank": 10,
+  "redraftValue": 5460
+ },
+ {
+  "player": {
+   "id": 9969,
+   "name": "De'Von Achane",
+   "sleeperId": "9226",
+   "mflId": "16167",
+   "position": "RB",
+   "maybeTeam": "MIA"
+  },
+  "value": 5438,
+  "overallRank": 20,
+  "positionRank": 11,
+  "redraftValue": 5441
+ },
+ {
+  "player": {
+   "id": 12573,
+   "name": "Omarion Hampton",
+   "sleeperId": "12507",
+   "mflId": "17044",
+   "position": "RB",
+   "maybeTeam": "LAC"
+  },
+  "value": 4957,
+  "overallRank": 21,
+  "positionRank": 12,
+  "redraftValue": 4960
+ },
+ {
+  "player": {
+   "id": 6963,
+   "name": "Javonte Williams",
+   "sleeperId": "7588",
+   "mflId": "15256",
+   "position": "RB",
+   "maybeTeam": "DAL"
+  },
+  "value": 4729,
+  "overallRank": 22,
+  "positionRank": 13,
+  "redraftValue": 4732
+ },
+ {
+  "player": {
+   "id": 9930,
+   "name": "Zay Flowers",
+   "sleeperId": "9997",
+   "mflId": "16190",
+   "position": "WR",
+   "maybeTeam": "BAL"
+  },
+  "value": 4605,
+  "overallRank": 23,
+  "positionRank": 8,
+  "redraftValue": 4637
+ },
+ {
+  "player": {
+   "id": 11702,
+   "name": "Brock Bowers",
+   "sleeperId": "11604",
+   "mflId": "16641",
+   "position": "TE",
+   "maybeTeam": "LV"
+  },
+  "value": 4561,
+  "overallRank": 24,
+  "positionRank": 2,
+  "redraftValue": 4676
+ },
+ {
+  "player": {
+   "id": 4576,
+   "name": "Breece Hall",
+   "sleeperId": "8155",
+   "mflId": "15708",
+   "position": "RB",
+   "maybeTeam": "NYJ"
+  },
+  "value": 4552,
+  "overallRank": 25,
+  "positionRank": 14,
+  "redraftValue": 4555
+ },
+ {
+  "player": {
+   "id": 998,
+   "name": "Drake London",
+   "sleeperId": "8112",
+   "mflId": "15751",
+   "position": "WR",
+   "maybeTeam": "ATL"
+  },
+  "value": 4519,
+  "overallRank": 26,
+  "positionRank": 9,
+  "redraftValue": 4550
+ },
+ {
+  "player": {
+   "id": 6635,
+   "name": "DeVonta Smith",
+   "sleeperId": "7525",
+   "mflId": "15282",
+   "position": "WR",
+   "maybeTeam": "PHI"
+  },
+  "value": 4329,
+  "overallRank": 27,
+  "positionRank": 10,
+  "redraftValue": 4359
+ },
+ {
+  "player": {
+   "id": 5030,
+   "name": "Nico Collins",
+   "sleeperId": "7569",
+   "mflId": "15290",
+   "position": "WR",
+   "maybeTeam": "HOU"
+  },
+  "value": 4284,
+  "overallRank": 28,
+  "positionRank": 11,
+  "redraftValue": 4314
+ },
+ {
+  "player": {
+   "id": 1436,
+   "name": "George Pickens",
+   "sleeperId": "8137",
+   "mflId": "15762",
+   "position": "WR",
+   "maybeTeam": "DAL"
+  },
+  "value": 4235,
+  "overallRank": 29,
+  "positionRank": 12,
+  "redraftValue": 4264
+ },
+ {
+  "player": {
+   "id": 7315,
+   "name": "Kyren Williams",
+   "sleeperId": "8150",
+   "mflId": "15710",
+   "position": "RB",
+   "maybeTeam": "LAR"
+  },
+  "value": 4062,
+  "overallRank": 30,
+  "positionRank": 15,
+  "redraftValue": 4065
+ },
+ {
+  "player": {
+   "id": 1574,
+   "name": "D'Andre Swift",
+   "sleeperId": "6790",
+   "mflId": "14797",
+   "position": "RB",
+   "maybeTeam": "CHI"
+  },
+  "value": 3976,
+  "overallRank": 31,
+  "positionRank": 16,
+  "redraftValue": 3979
+ },
+ {
+  "player": {
+   "id": 11779,
+   "name": "Bucky Irving",
+   "sleeperId": "11584",
+   "mflId": "16598",
+   "position": "RB",
+   "maybeTeam": "TB"
+  },
+  "value": 3963,
+  "overallRank": 32,
+  "positionRank": 17,
+  "redraftValue": 3966
+ },
+ {
+  "player": {
+   "id": 13485,
+   "name": "Jeremiyah Love",
+   "sleeperId": "13287",
+   "mflId": "17472",
+   "position": "RB",
+   "maybeTeam": "ARI"
+  },
+  "value": 3844,
+  "overallRank": 33,
+  "positionRank": 18,
+  "redraftValue": 3846
+ },
+ {
+  "player": {
+   "id": 6813,
+   "name": "Garrett Wilson",
+   "sleeperId": "8146",
+   "mflId": "15753",
+   "position": "WR",
+   "maybeTeam": "NYJ"
+  },
+  "value": 3828,
+  "overallRank": 34,
+  "positionRank": 13,
+  "redraftValue": 3855
+ },
+ {
+  "player": {
+   "id": 3101,
+   "name": "Lamar Jackson",
+   "sleeperId": "4881",
+   "mflId": "13593",
+   "position": "QB",
+   "maybeTeam": "BAL"
+  },
+  "value": 3772,
+  "overallRank": 35,
+  "positionRank": 2,
+  "redraftValue": 3769
+ },
+ {
+  "player": {
+   "id": 11737,
+   "name": "Malik Nabers",
+   "sleeperId": "11632",
+   "mflId": "16615",
+   "position": "WR",
+   "maybeTeam": "NYG"
+  },
+  "value": 3495,
+  "overallRank": 36,
+  "positionRank": 14,
+  "redraftValue": 3519
+ },
+ {
+  "player": {
+   "id": 9894,
+   "name": "Parker Washington",
+   "sleeperId": "9487",
+   "mflId": "16192",
+   "position": "WR",
+   "maybeTeam": "JAX"
+  },
+  "value": 3361,
+  "overallRank": 37,
+  "positionRank": 15,
+  "redraftValue": 3384
+ },
+ {
+  "player": {
+   "id": 1409,
+   "name": "Jaylen Waddle",
+   "sleeperId": "7526",
+   "mflId": "15284",
+   "position": "WR",
+   "maybeTeam": "DEN"
+  },
+  "value": 3284,
+  "overallRank": 38,
+  "positionRank": 16,
+  "redraftValue": 3307
+ },
+ {
+  "player": {
+   "id": 12635,
+   "name": "Tetairoa McMillan",
+   "sleeperId": "12526",
+   "mflId": "17071",
+   "position": "WR",
+   "maybeTeam": "CAR"
+  },
+  "value": 3251,
+  "overallRank": 39,
+  "positionRank": 17,
+  "redraftValue": 3274
+ },
+ {
+  "player": {
+   "id": 7515,
+   "name": "David Montgomery",
+   "sleeperId": "5892",
+   "mflId": "14071",
+   "position": "RB",
+   "maybeTeam": "HOU"
+  },
+  "value": 3243,
+  "overallRank": 40,
+  "positionRank": 19,
+  "redraftValue": 3245
+ },
+ {
+  "player": {
+   "id": 5981,
+   "name": "Christian Watson",
+   "sleeperId": "8167",
+   "mflId": "15789",
+   "position": "WR",
+   "maybeTeam": "GB"
+  },
+  "value": 3152,
+  "overallRank": 41,
+  "positionRank": 18,
+  "redraftValue": 3174
+ },
+ {
+  "player": {
+   "id": 183,
+   "name": "Chuba Hubbard",
+   "sleeperId": "7594",
+   "mflId": "15261",
+   "position": "RB",
+   "maybeTeam": "CAR"
+  },
+  "value": 3145,
+  "overallRank": 42,
+  "positionRank": 20,
+  "redraftValue": 3147
+ },
+ {
+  "player": {
+   "id": 1503,
+   "name": "Davante Adams",
+   "sleeperId": "2133",
+   "mflId": "11675",
+   "position": "WR",
+   "maybeTeam": "LAR"
+  },
+  "value": 3051,
+  "overallRank": 43,
+  "positionRank": 19,
+  "redraftValue": 3072
+ },
+ {
+  "player": {
+   "id": 12643,
+   "name": "Cam Skattebo",
+   "sleeperId": "12481",
+   "mflId": "17045",
+   "position": "RB",
+   "maybeTeam": "NYG"
+  },
+  "value": 2930,
+  "overallRank": 44,
+  "positionRank": 21,
+  "redraftValue": 2932
+ },
+ {
+  "player": {
+   "id": 5531,
+   "name": "Tee Higgins",
+   "sleeperId": "6801",
+   "mflId": "14835",
+   "position": "WR",
+   "maybeTeam": "CIN"
+  },
+  "value": 2838,
+  "overallRank": 45,
+  "positionRank": 20,
+  "redraftValue": 2858
+ },
+ {
+  "player": {
+   "id": 11766,
+   "name": "Ladd McConkey",
+   "sleeperId": "11635",
+   "mflId": "16627",
+   "position": "WR",
+   "maybeTeam": "LAC"
+  },
+  "value": 2818,
+  "overallRank": 46,
+  "positionRank": 21,
+  "redraftValue": 2838
+ },
+ {
+  "player": {
+   "id": 9929,
+   "name": "Rashee Rice",
+   "sleeperId": "10229",
+   "mflId": "16194",
+   "position": "WR",
+   "maybeTeam": "KC"
+  },
+  "value": 2773,
+  "overallRank": 47,
+  "positionRank": 22,
+  "redraftValue": 2792
+ },
+ {
+  "player": {
+   "id": 9819,
+   "name": "Dalton Kincaid",
+   "sleeperId": "10236",
+   "mflId": "16213",
+   "position": "TE",
+   "maybeTeam": "BUF"
+  },
+  "value": 2571,
+  "overallRank": 48,
+  "positionRank": 3,
+  "redraftValue": 2636
+ },
+ {
+  "player": {
+   "id": 12620,
+   "name": "Bhayshul Tuten",
+   "sleeperId": "12490",
+   "mflId": "17052",
+   "position": "RB",
+   "maybeTeam": "JAX"
+  },
+  "value": 2450,
+  "overallRank": 49,
+  "positionRank": 22,
+  "redraftValue": 2452
+ },
+ {
+  "player": {
+   "id": 12580,
+   "name": "TreVeyon Henderson",
+   "sleeperId": "12529",
+   "mflId": "17043",
+   "position": "RB",
+   "maybeTeam": "NE"
+  },
+  "value": 2425,
+  "overallRank": 50,
+  "positionRank": 23,
+  "redraftValue": 2427
+ },
+ {
+  "player": {
+   "id": 4118,
+   "name": "A.J. Brown",
+   "sleeperId": "5859",
+   "mflId": "14104",
+   "position": "WR",
+   "maybeTeam": "NE"
+  },
+  "value": 2396,
+  "overallRank": 51,
+  "positionRank": 23,
+  "redraftValue": 2413
+ },
+ {
+  "player": {
+   "id": 6110,
+   "name": "DJ Moore",
+   "sleeperId": "4983",
+   "mflId": "13635",
+   "position": "WR",
+   "maybeTeam": "BUF"
+  },
+  "value": 2345,
+  "overallRank": 52,
+  "positionRank": 24,
+  "redraftValue": 2362
+ },
+ {
+  "player": {
+   "id": 12592,
+   "name": "Tyler Warren",
+   "sleeperId": "12518",
+   "mflId": "17102",
+   "position": "TE",
+   "maybeTeam": "IND"
+  },
+  "value": 2292,
+  "overallRank": 53,
+  "positionRank": 4,
+  "redraftValue": 2350
+ },
+ {
+  "player": {
+   "id": 6407,
+   "name": "Jalen Hurts",
+   "sleeperId": "6904",
+   "mflId": "14783",
+   "position": "QB",
+   "maybeTeam": "PHI"
+  },
+  "value": 2291,
+  "overallRank": 54,
+  "positionRank": 3,
+  "redraftValue": 2290
+ },
+ {
+  "player": {
+   "id": 5570,
+   "name": "Brock Purdy",
+   "sleeperId": "8183",
+   "mflId": "15698",
+   "position": "QB",
+   "maybeTeam": "SF"
+  },
+  "value": 2276,
+  "overallRank": 55,
+  "positionRank": 4,
+  "redraftValue": 2275
+ },
+ {
+  "player": {
+   "id": 12595,
+   "name": "Emeka Egbuka",
+   "sleeperId": "12514",
+   "mflId": "17081",
+   "position": "WR",
+   "maybeTeam": "TB"
+  },
+  "value": 2238,
+  "overallRank": 56,
+  "positionRank": 25,
+  "redraftValue": 2254
+ },
+ {
+  "player": {
+   "id": 1002,
+   "name": "Joe Burrow",
+   "sleeperId": "6770",
+   "mflId": "14777",
+   "position": "QB",
+   "maybeTeam": "CIN"
+  },
+  "value": 2220,
+  "overallRank": 57,
+  "positionRank": 5,
+  "redraftValue": 2219
+ },
+ {
+  "player": {
+   "id": 880,
+   "name": "Patrick Mahomes",
+   "sleeperId": "4046",
+   "mflId": "13116",
+   "position": "QB",
+   "maybeTeam": "KC"
+  },
+  "value": 2144,
+  "overallRank": 58,
+  "positionRank": 6,
+  "redraftValue": 2143
+ },
+ {
+  "player": {
+   "id": 9843,
+   "name": "Sam LaPorta",
+   "sleeperId": "10859",
+   "mflId": "16214",
+   "position": "TE",
+   "maybeTeam": "DET"
+  },
+  "value": 2083,
+  "overallRank": 59,
+  "positionRank": 5,
+  "redraftValue": 2136
+ },
+ {
+  "player": {
+   "id": 3156,
+   "name": "Travis Etienne",
+   "sleeperId": "7543",
+   "mflId": "15253",
+   "position": "RB",
+   "maybeTeam": "NO"
+  },
+  "value": 1970,
+  "overallRank": 60,
+  "positionRank": 24,
+  "redraftValue": 1972
+ },
+ {
+  "player": {
+   "id": 5709,
+   "name": "George Kittle",
+   "sleeperId": "4217",
+   "mflId": "13299",
+   "position": "TE",
+   "maybeTeam": "SF"
+  },
+  "value": 1736,
+  "overallRank": 65,
+  "positionRank": 6,
+  "redraftValue": 1780
+ },
+ {
+  "player": {
+   "id": 2204,
+   "name": "Travis Kelce",
+   "sleeperId": "1466",
+   "mflId": "11244",
+   "position": "TE",
+   "maybeTeam": "KC"
+  },
+  "value": 1654,
+  "overallRank": 66,
+  "positionRank": 7,
+  "redraftValue": 1696
+ },
+ {
+  "player": {
+   "id": 9824,
+   "name": "Tucker Kraft",
+   "sleeperId": "9484",
+   "mflId": "16222",
+   "position": "TE",
+   "maybeTeam": "GB"
+  },
+  "value": 1488,
+  "overallRank": 71,
+  "positionRank": 8,
+  "redraftValue": 1526
+ },
+ {
+  "player": {
+   "id": 12578,
+   "name": "Colston Loveland",
+   "sleeperId": "12517",
+   "mflId": "17104",
+   "position": "TE",
+   "maybeTeam": "CHI"
+  },
+  "value": 1312,
+  "overallRank": 75,
+  "positionRank": 9,
+  "redraftValue": 1345
+ },
+ {
+  "player": {
+   "id": 7402,
+   "name": "Isaiah Likely",
+   "sleeperId": "8131",
+   "mflId": "15798",
+   "position": "TE",
+   "maybeTeam": "NYG"
+  },
+  "value": 995,
+  "overallRank": 90,
+  "positionRank": 10,
+  "redraftValue": 1021
+ },
+ {
+  "player": {
+   "id": 4519,
+   "name": "Mark Andrews",
+   "sleeperId": "5012",
+   "mflId": "13671",
+   "position": "TE",
+   "maybeTeam": "BAL"
+  },
+  "value": 687,
+  "overallRank": 102,
+  "positionRank": 11,
+  "redraftValue": 705
+ },
+ {
+  "player": {
+   "id": 280,
+   "name": "Kyle Pitts",
+   "sleeperId": "7553",
+   "mflId": "15329",
+   "position": "TE",
+   "maybeTeam": "ATL"
+  },
+  "value": 673,
+  "overallRank": 103,
+  "positionRank": 12,
+  "redraftValue": 690
+ },
+ {
+  "player": {
+   "id": 12659,
+   "name": "Harold Fannin",
+   "sleeperId": "12506",
+   "mflId": "17103",
+   "position": "TE",
+   "maybeTeam": "CLE"
+  },
+  "value": 665,
+  "overallRank": 104,
+  "positionRank": 13,
+  "redraftValue": 682
+ },
+ {
+  "player": {
+   "id": 6785,
+   "name": "Jake Ferguson",
+   "sleeperId": "8110",
+   "mflId": "15799",
+   "position": "TE",
+   "maybeTeam": "DAL"
+  },
+  "value": 653,
+  "overallRank": 107,
+  "positionRank": 14,
+  "redraftValue": 670
+ },
+ {
+  "player": {
+   "id": 4655,
+   "name": "Dalton Schultz",
+   "sleeperId": "5001",
+   "mflId": "13772",
+   "position": "TE",
+   "maybeTeam": "HOU"
+  },
+  "value": 603,
+  "overallRank": 111,
+  "positionRank": 15,
+  "redraftValue": 619
+ }
+]

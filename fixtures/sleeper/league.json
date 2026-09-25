@@ -1,0 +1,42 @@
+{
+ "league_id": "1357193858412220416",
+ "name": "Sample League 1",
+ "season": "2026",
+ "status": "in_season",
+ "total_rosters": 12,
+ "roster_positions": [
+  "QB",
+  "RB",
+  "RB",
+  "WR",
+  "WR",
+  "WR",
+  "TE",
+  "FLEX",
+  "FLEX",
+  "SUPER_FLEX",
+  "BN",
+  "BN",
+  "BN",
+  "BN",
+  "BN",
+  "BN",
+  "BN",
+  "BN",
+  "BN",
+  "BN",
+  "BN",
+  "BN"
+ ],
+ "previous_league_id": null,
+ "draft_id": "1357193859871805440",
+ "settings": {
+  "type": 2,
+  "draft_rounds": 3,
+  "num_teams": 12
+ },
+ "scoring_settings": {
+  "rec": 1,
+  "bonus_rec_te": 0.5
+ }
+}

@@ -1,0 +1,168 @@
+[
+ {
+  "league_id": "1340796744480337920",
+  "name": "Sample League 1",
+  "season": "2026",
+  "status": "in_season",
+  "total_rosters": 12,
+  "roster_positions": [
+   "QB",
+   "RB",
+   "RB",
+   "WR",
+   "WR",
+   "WR",
+   "TE",
+   "FLEX",
+   "FLEX",
+   "SUPER_FLEX",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN"
+  ],
+  "previous_league_id": "1225119795943309312",
+  "draft_id": "1340796744488726528",
+  "settings": {
+   "type": 0,
+   "draft_rounds": 3,
+   "num_teams": 12
+  },
+  "scoring_settings": {
+   "rec": 1,
+   "bonus_rec_te": 1
+  }
+ },
+ {
+  "league_id": "1343279959581409280",
+  "name": "Sample League 2",
+  "season": "2026",
+  "status": "in_season",
+  "total_rosters": 10,
+  "roster_positions": [
+   "QB",
+   "RB",
+   "RB",
+   "WR",
+   "WR",
+   "TE",
+   "FLEX",
+   "FLEX",
+   "SUPER_FLEX",
+   "K",
+   "DEF",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN"
+  ],
+  "previous_league_id": "1217823700296945664",
+  "draft_id": "1343279959593975808",
+  "settings": {
+   "type": 1,
+   "draft_rounds": 3,
+   "num_teams": 10
+  },
+  "scoring_settings": {
+   "rec": 1
+  }
+ },
+ {
+  "league_id": "1315466184249868288",
+  "name": "Sample League 3",
+  "season": "2026",
+  "status": "in_season",
+  "total_rosters": 10,
+  "roster_positions": [
+   "QB",
+   "RB",
+   "RB",
+   "WR",
+   "WR",
+   "TE",
+   "TE",
+   "FLEX",
+   "FLEX",
+   "FLEX",
+   "SUPER_FLEX",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN"
+  ],
+  "previous_league_id": "1180426421520146432",
+  "draft_id": "1315466184254066688",
+  "settings": {
+   "type": 2,
+   "draft_rounds": 5,
+   "num_teams": 10
+  },
+  "scoring_settings": {
+   "rec": 0.5,
+   "bonus_rec_te": 0.75
+  }
+ },
+ {
+  "league_id": "1372074253033156608",
+  "name": "Sample League 4",
+  "season": "2026",
+  "status": "pre_draft",
+  "total_rosters": 16,
+  "roster_positions": [
+   "QB",
+   "RB",
+   "RB",
+   "WR",
+   "WR",
+   "TE",
+   "TE",
+   "FLEX",
+   "FLEX",
+   "SUPER_FLEX",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN",
+   "BN"
+  ],
+  "previous_league_id": null,
+  "draft_id": "1373213141592199168",
+  "settings": {
+   "type": 3,
+   "draft_rounds": 3,
+   "num_teams": 16
+  },
+  "scoring_settings": {
+   "rec": 0.5,
+   "bonus_rec_te": 0.75
+  }
+ }
+]

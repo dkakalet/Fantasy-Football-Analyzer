@@ -8,8 +8,10 @@ import type { ConsensusAsset, SourceValue } from "./valuation";
 
 export interface AssetRef {
   id: string;
-  /** Display name when the asset has no value (e.g. a player no source lists). */
+  /** Display fields for when the asset has no value (e.g. a player no source lists). */
   name?: string;
+  position?: string | null;
+  team?: string | null;
 }
 
 export interface ValuedAsset {
@@ -43,8 +45,8 @@ export function valueAsset(ref: AssetRef, assets: ReadonlyMap<string, ConsensusA
     id: ref.id,
     kind: pick ? "pick" : "player",
     name: pick ? pickLabel(ref.id) : (found?.name ?? ref.name ?? ref.id),
-    position: found?.position ?? null,
-    team: found?.team ?? null,
+    position: found?.position ?? ref.position ?? null,
+    team: found ? found.team : (ref.team ?? null),
     value: found?.value ?? null,
     singleSource: found?.singleSource ?? false,
     sources: found?.sources ?? [],

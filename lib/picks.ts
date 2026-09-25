@@ -64,6 +64,11 @@ export function pickLabel(key: string): string {
   return `${p.season} ${ordinal(p.round)}`;
 }
 
+/** Without reference picks (e.g. redraft), the next rookie draft: next year from June on. */
+export function fallbackFirstPickSeason(now: Date): number {
+  return now.getUTCMonth() >= 5 ? now.getUTCFullYear() + 1 : now.getUTCFullYear();
+}
+
 /** How a source value was found for a requested pick key. */
 export type PickVia = "exact" | "tier" | "round";
 

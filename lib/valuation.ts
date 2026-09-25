@@ -7,7 +7,7 @@
 
 import { consensus } from "./consensus";
 import { computeScaleFactor, DEFAULT_TOP_N } from "./normalize";
-import { parsePickKey, pickLabel, resolvePick, slotKey, TIERS, tierKey, type PickVia } from "./picks";
+import { fallbackFirstPickSeason, parsePickKey, pickLabel, resolvePick, slotKey, TIERS, tierKey, type PickVia } from "./picks";
 import { fetchSleeperPlayers, type SleeperPlayer } from "./sleeper/players";
 import { enabledSources, SOURCE_ORDER } from "./sources";
 import type { AssetKind, AssetValue, LeagueSettings, SourceAdapter, SourceId, SourceLoad, SupportResult } from "./types";
@@ -93,11 +93,6 @@ export interface BuildInput {
   sleeperPlayers: readonly SleeperPlayer[] | null;
   topN?: number;
   now?: Date;
-}
-
-/** Without reference picks (e.g. redraft), the next rookie draft: next year from June on. */
-export function fallbackFirstPickSeason(now: Date): number {
-  return now.getUTCMonth() >= 5 ? now.getUTCFullYear() + 1 : now.getUTCFullYear();
 }
 
 const PICK_FLAG: Record<PickVia, string | null> = {

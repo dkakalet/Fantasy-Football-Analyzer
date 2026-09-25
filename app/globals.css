@@ -3,17 +3,24 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Team identity in the score bar (categorical slots 1-2, validated for CVD). */
+  --team-a: #2a78d6;
+  --team-b: #eb6834;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-team-a: var(--team-a);
+  --color-team-b: var(--team-b);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --team-a: #3987e5;
+    --team-b: #d95926;
   }
 }
 

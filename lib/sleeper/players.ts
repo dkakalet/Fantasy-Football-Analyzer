@@ -4,6 +4,7 @@
 
 import { cached, TTL, type Cached } from "../cache";
 import { fetchJson } from "../http";
+import { normalizeName } from "../names";
 import { sleeperUrls } from "./client";
 
 export const FANTASY_POSITIONS = ["QB", "RB", "WR", "TE"] as const;
@@ -31,9 +32,12 @@ export interface SleeperPlayer {
 
 export function trimPlayers(raw: Record<string, SleeperRawPlayer>): SleeperPlayer[] {
   const out: SleeperPlayer[] = [];
+  const offense = FANTASY_POSITIONS as readonly string[];
   for (const p of Object.values(raw)) {
-    const pos = p.position ?? "";
-    if (!(FANTASY_POSITIONS as readonly string[]).includes(pos)) continue;
+    // Two-way players (e.g. Travis Hunter: position "DB", fantasy_positions ["DB", "WR"])
+    // are kept under their first offensive fantasy position.
+    const pos = offense.includes(p.position ?? "") ? p.position! : p.fantasy_positions?.find((f) => offense.includes(f));
+    if (!pos) continue;
     const name = p.full_name || [p.first_name, p.last_name].filter(Boolean).join(" ");
     if (!name) continue;
     out.push({ id: p.player_id, name, pos, team: p.team ?? null, active: Boolean(p.active) });
@@ -42,7 +46,29 @@ export function trimPlayers(raw: Record<string, SleeperRawPlayer>): SleeperPlaye
 }
 
 export function fetchSleeperPlayers(): Promise<Cached<SleeperPlayer[]>> {
-  return cached("sleeper:players:nfl", TTL.sleeperPlayers, async () =>
+  // Bump the version when trimPlayers changes so cached copies are refetched.
+  return cached("sleeper:players:nfl:v2", TTL.sleeperPlayers, async () =>
     trimPlayers(await fetchJson<Record<string, SleeperRawPlayer>>(sleeperUrls.players(), 60_000)),
   );
+}
+
+/**
+ * Name + position lookup into the Sleeper player DB, for sources without a
+ * usable ID. Ambiguous names prefer a team match, then active players.
+ */
+export function buildNameIndex(players: readonly SleeperPlayer[]) {
+  const byKey = new Map<string, SleeperPlayer[]>();
+  for (const p of players) {
+    const k = `${normalizeName(p.name)}|${p.pos}`;
+    const list = byKey.get(k);
+    if (list) list.push(p);
+    else byKey.set(k, [p]);
+  }
+  return (name: string, pos: string, team?: string | null): string | undefined => {
+    const list = byKey.get(`${normalizeName(name)}|${pos}`);
+    if (!list) return undefined;
+    if (list.length === 1) return list[0].id;
+    const score = (p: SleeperPlayer) => (team && p.team === team ? 2 : 0) + (p.active ? 1 : 0);
+    return [...list].sort((a, b) => score(b) - score(a))[0].id;
+  };
 }

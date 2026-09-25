@@ -6,8 +6,11 @@
 //   db_playerids.csv    ID crosswalk (fantasypros_id, mfl_id -> sleeper_id)
 
 import { cached, TTL, type Cached } from "../cache";
-import { parseCsv } from "../csv";
+import { num, parseCsv } from "../csv";
 import { fetchText } from "../http";
+import { parseDynastyProcessPick } from "../picks";
+import { buildNameIndex, fetchSleeperPlayers, type SleeperPlayer } from "../sleeper/players";
+import type { AssetValue, NumQbs, SourceAdapter, SourceLoad } from "../types";
 
 export const DP_BASE = "https://raw.githubusercontent.com/dynastyprocess/data/master/files";
 export const DP_FILES = {
@@ -70,4 +73,99 @@ export function fetchDynastyProcessIds(): Promise<Cached<DpIdRow[]>> {
   return cached("dynastyprocess:ids", TTL.values, async () =>
     trimIdRows(parseCsv(await fetchText(DP_FILES.ids, 60_000))),
   );
+}
+
+/**
+ * Turn DynastyProcess rows into AssetValues for the given QB format.
+ * Players: fp_id -> crosswalk sleeper_id first, normalized name + position second.
+ */
+export function mapDynastyProcess(
+  raw: DpRaw,
+  ids: readonly DpIdRow[],
+  sleeperPlayers: readonly SleeperPlayer[],
+  numQbs: NumQbs,
+): Pick<SourceLoad, "values" | "stats"> {
+  const col = numQbs === 2 ? "value_2qb" : "value_1qb";
+  const byFpId = new Map<string, string>();
+  for (const r of ids) if (r.fantasypros_id && r.fantasypros_id !== "NA" && !byFpId.has(r.fantasypros_id)) byFpId.set(r.fantasypros_id, r.sleeper_id);
+  const byName = buildNameIndex(sleeperPlayers);
+
+  const values: AssetValue[] = [];
+  const skipped: Record<string, number> = {};
+  const matchedBy: Record<string, number> = { crosswalk: 0, name: 0 };
+  const skip = (reason: string) => (skipped[reason] = (skipped[reason] ?? 0) + 1);
+
+  for (const r of raw.players) {
+    const v = num(r[col]);
+    if (v === null) {
+      skip("no value");
+      continue;
+    }
+    let id = byFpId.get(r.fp_id);
+    if (id) matchedBy.crosswalk++;
+    else {
+      id = byName(r.player, r.pos, r.team);
+      if (id) matchedBy.name++;
+    }
+    if (!id) {
+      skip("no Sleeper match");
+      continue;
+    }
+    values.push({ assetId: id, kind: "player", rawValue: v, sourceName: r.player, position: r.pos, team: r.team || null });
+  }
+
+  let picks = 0;
+  for (const r of raw.picks) {
+    const key = parseDynastyProcessPick(r.player);
+    const v = num(r[col]);
+    if (!key || v === null) {
+      skip(key ? "no value" : "unrecognized pick label");
+      continue;
+    }
+    picks++;
+    values.push({ assetId: key, kind: "pick", rawValue: v, sourceName: r.player });
+  }
+  return { values, stats: { players: raw.players.length, picks, skipped, matchedBy } };
+}
+
+export interface DynastyProcessDeps {
+  loadRaw: () => Promise<Cached<DpRaw>>;
+  loadIds: () => Promise<Cached<DpIdRow[]>>;
+  loadSleeperPlayers: () => Promise<Cached<SleeperPlayer[]>>;
+}
+
+export function createDynastyProcessSource(
+  deps: DynastyProcessDeps = {
+    loadRaw: fetchDynastyProcessRaw,
+    loadIds: fetchDynastyProcessIds,
+    loadSleeperPlayers: fetchSleeperPlayers,
+  },
+): SourceAdapter {
+  const source: SourceAdapter = {
+    id: "dynastyprocess",
+    name: "DynastyProcess",
+    homepage: "https://dynastyprocess.com",
+    // Dynasty only. One fixed scoring baseline and no team-count or TE-premium
+    // variants, so those settings are always approximations.
+    supports: (s) =>
+      s.format !== "dynasty"
+        ? { supported: false, approximated: [] }
+        : { supported: true, approximated: ["ppr", "teams", ...(s.tep !== "none" ? ["tep"] : [])] },
+    async load(settings) {
+      const [raw, ids, sleeperPlayers] = await Promise.all([
+        deps.loadRaw(),
+        deps.loadIds(),
+        // Name fallback is optional: without the Sleeper DB, only crosswalk matches count.
+        deps.loadSleeperPlayers().catch(() => null),
+      ]);
+      return {
+        ...mapDynastyProcess(raw.value, ids.value, sleeperPlayers?.value ?? [], settings.numQbs),
+        fetchedAt: Math.min(raw.fetchedAt, ids.fetchedAt),
+        from: raw.from === "stale" || ids.from === "stale" ? "stale" : raw.from,
+        error: raw.error ?? ids.error,
+      };
+    },
+    fetchValues: async (settings) => (await source.load(settings)).values,
+  };
+  return source;
 }

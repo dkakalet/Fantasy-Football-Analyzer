@@ -1,6 +1,7 @@
 # Fixtures
 
-Trimmed live responses, captured by `npm run fixtures` (`scripts/fetch-fixtures.ts`).
+Trimmed live responses, captured by `npm run fixtures` (`scripts/fetch-fixtures.ts`;
+`-- --only ktc` for KeepTradeCut).
 Last capture: **2026-09-25**. `probes.json` summarizes what every live call returned
 (record counts, top values, all pick labels, the Sleeper league shape). The types in
 `lib/` are built from these files.
@@ -66,3 +67,19 @@ Findings:
 - `settings.type`: 0 redraft, 1 keeper, 2 dynasty, 3 (seen on a guillotine-style league).
 - `traded_picks` includes already-used picks (2026, draft `complete`). Future seasons seen
   across 26 leagues: 2027, 2028, 2029.
+
+## ktc/
+
+From `https://keeptradecut.com/dynasty-rankings`, the JSON embedded in
+`<script type="application/json" id="ktc-players">`. **Scraped data — see the KTC terms note in the
+main README before publishing this repo.**
+
+| File | Trim |
+| --- | --- |
+| `ktc-players.json` | first 250 players as the page lists them + all 36 picks; name, IDs, position, team, and `value` / `tep` / `tepp` / `teppp` for the 1QB and Superflex lists |
+| `probe.json` | entry counts by position, pick labels |
+
+Findings:
+- 500 entries: 464 players and 36 picks (`position: "RDP"`).
+- Picks are `2027 Early 1st` … `2029 Late 4th`, the same label format as DynastyProcess.
+- Every player has an `mflid`, which matches the DynastyProcess crosswalk's `mfl_id`.

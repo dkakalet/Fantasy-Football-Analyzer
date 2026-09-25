@@ -7,6 +7,7 @@ import type { DpIdRow, DpRaw, DpValueRow } from "../sources/dynastyprocess";
 import { trimIdRows } from "../sources/dynastyprocess";
 import type { FcRecord } from "../sources/fantasycalc";
 import type { SleeperPlayer } from "../sleeper/players";
+import type { KtcPlayer } from "../sources/ktc";
 
 const ROOT = path.join(__dirname, "..", "..", "fixtures");
 export const FIXTURE_TIME = Date.parse("2026-09-25T12:00:00Z");
@@ -29,3 +30,5 @@ export const dpIdsFixture = (): DpIdRow[] => trimIdRows(parseCsv(readFixture("dy
 export const sleeperPlayersFixture = () => jsonFixture<SleeperPlayer[]>("sleeper/players.trimmed.json");
 
 export const asCached = <T>(value: T): Cached<T> => ({ value, fetchedAt: FIXTURE_TIME, from: "network" });
+
+export const ktcFixture = () => jsonFixture<KtcPlayer[]>("ktc/ktc-players.json");

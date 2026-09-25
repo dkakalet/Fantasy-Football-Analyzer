@@ -1,8 +1,9 @@
 // Fetch every data source live, trim the responses, and write them to fixtures/.
 // Also writes fixtures/probes.json: a summary of what each live call returned.
 //
-//   npm run fixtures                       # defaults below
+//   npm run fixtures                       # FantasyCalc, DynastyProcess, Sleeper
 //   npm run fixtures -- --user <sleeper username> --league <league_id>
+//   npm run fixtures -- --only ktc         # KeepTradeCut only (opt-in: check KTC's terms first)
 //
 // Sleeper fixtures are anonymized (display names / team names / league names
 // replaced) so third-party usernames aren't committed.
@@ -14,6 +15,7 @@ import { fetchJson, fetchText, HttpError } from "../lib/http";
 import { DEFAULT_SETTINGS } from "../lib/settings";
 import { DP_FILES, DP_ID_COLUMNS } from "../lib/sources/dynastyprocess";
 import { fantasyCalcUrl, type FcRecord } from "../lib/sources/fantasycalc";
+import { extractKtcPlayers, KTC_URL, type KtcPlayer } from "../lib/sources/ktc";
 import {
   sleeperUrls,
   type SleeperDraft,
@@ -36,6 +38,7 @@ const arg = (name: string, fallback: string) => {
 // Public account with many dynasty leagues; any Sleeper username works.
 const SLEEPER_USER = arg("user", "keeptradecut");
 const SLEEPER_LEAGUE = arg("league", "1357193858412220416");
+const ONLY = arg("only", "");
 
 const probes: Record<string, unknown> = { fetchedAt: new Date().toISOString() };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -256,7 +259,45 @@ async function sleeper(extraIds: Set<string>) {
   };
 }
 
+// ------------------------------------------------------------- KeepTradeCut
+
+async function ktc() {
+  console.log("KeepTradeCut");
+  const players = extractKtcPlayers(await fetchText(KTC_URL));
+  const trimSet = (v: KtcPlayer["oneQBValues"]) => ({
+    value: v.value,
+    tep: { value: v.tep?.value },
+    tepp: { value: v.tepp?.value },
+    teppp: { value: v.teppp?.value },
+  });
+  // Keep the first 250 players as the page lists them, and every pick.
+  let kept = 0;
+  const top = players.filter((p) => p.position === "RDP" || ++kept <= 250);
+  const trimmed = top.map((p) => ({
+    playerName: p.playerName,
+    playerID: p.playerID,
+    position: p.position,
+    team: p.team,
+    mflid: p.mflid ?? null,
+    oneQBValues: trimSet(p.oneQBValues),
+    superflexValues: trimSet(p.superflexValues),
+  }));
+  // One record per line keeps the file diffable.
+  await save("ktc/ktc-players.json", `[\n${trimmed.map((p) => JSON.stringify(p)).join(",\n")}\n]\n`);
+  const count: Record<string, number> = {};
+  for (const p of players) count[p.position] = (count[p.position] ?? 0) + 1;
+  await save("ktc/probe.json", {
+    fetchedAt: new Date().toISOString(),
+    url: KTC_URL,
+    entries: players.length,
+    byPosition: count,
+    pickLabels: players.filter((p) => p.position === "RDP").map((p) => p.playerName),
+    missingMflid: players.filter((p) => p.position !== "RDP" && !p.mflid).length,
+  });
+}
+
 async function main() {
+  if (ONLY === "ktc") return ktc();
   const fc = await fantasyCalc();
   const dpSleeperIds = await dynastyProcess();
   const fcSleeperIds = fc.map((r) => r.player.sleeperId).filter((x): x is string => !!x && !x.startsWith("FP_"));

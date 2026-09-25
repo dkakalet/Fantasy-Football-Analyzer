@@ -1,5 +1,7 @@
 // Response shapes of the app's own API routes, as the client sees them.
 
+import type { LeagueTeam, MappedLeague } from "@/lib/sleeper/league";
+import type { InventoryPick } from "@/lib/sleeper/picks";
 import type { LeagueSettings } from "@/lib/types";
 import type { SourceMeta } from "@/lib/valuation";
 
@@ -32,4 +34,32 @@ export interface PlayersResponse {
   fetchedAt?: string;
   players: IndexPlayer[];
   error?: string;
+}
+
+export interface LeagueSummary {
+  id: string;
+  name: string;
+  season: string;
+  status: string;
+  totalRosters: number;
+  type: string;
+  superflex: boolean;
+}
+
+export interface LeaguesResponse {
+  user: { id: string; displayName: string };
+  season: string;
+  leagues: LeagueSummary[];
+}
+
+export interface LeagueResponse {
+  league: { id: string; name: string; season: string; status: string; totalRosters: number };
+  settings: LeagueSettings;
+  notes: string[];
+  source: MappedLeague["source"];
+  teams: (LeagueTeam & { picks: InventoryPick[] })[];
+  pickSeasons: number[];
+  rounds: number;
+  players: IndexPlayer[];
+  fetchedAt: string;
 }

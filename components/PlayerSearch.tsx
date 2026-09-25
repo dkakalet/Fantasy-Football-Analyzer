@@ -9,18 +9,25 @@ export function PlayerSearch({
   exclude,
   onSelect,
   placeholder = "Search players (name, position, team)",
+  browseWhenEmpty = false,
 }: {
   players: readonly SearchablePlayer[];
   exclude: ReadonlySet<string>;
   onSelect: (p: SearchablePlayer) => void;
   placeholder?: string;
+  /** With an empty query, list every player by value (used for a single team's roster). */
+  browseWhenEmpty?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const listId = useId();
 
-  const results = useMemo(() => searchPlayers(query, players, 20).filter((p) => !exclude.has(p.id)).slice(0, 8), [query, players, exclude]);
+  const results = useMemo(() => {
+    if (browseWhenEmpty && !query.trim())
+      return players.filter((p) => !exclude.has(p.id)).sort((a, b) => (b.value ?? -1) - (a.value ?? -1) || a.name.localeCompare(b.name));
+    return searchPlayers(query, players, 20).filter((p) => !exclude.has(p.id)).slice(0, 8);
+  }, [query, players, exclude, browseWhenEmpty]);
 
   const choose = (p: SearchablePlayer | undefined) => {
     if (!p) return;
@@ -60,13 +67,13 @@ export function PlayerSearch({
         }}
         className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
       />
-      {open && query && (
+      {open && (query || browseWhenEmpty) && (
         <ul
           id={listId}
           role="listbox"
           className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-md border border-zinc-200 bg-white py-1 text-sm shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
         >
-          {results.length === 0 && <li className="px-3 py-2 text-zinc-500">No matching players</li>}
+          {results.length === 0 && <li className="px-3 py-2 text-zinc-500">{query ? "No matching players" : "No players left on this roster"}</li>}
           {results.map((p, i) => (
             <li
               key={p.id}

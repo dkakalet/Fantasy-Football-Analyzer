@@ -25,6 +25,7 @@ export function TradeColumn({
   teamControls,
   pickShortcuts,
   searchPlaceholder,
+  rosterMode = false,
 }: {
   title: string;
   items: TradeItem[];
@@ -41,6 +42,8 @@ export function TradeColumn({
   /** A team's own pick inventory (Sleeper import). */
   pickShortcuts?: ReactNode;
   searchPlaceholder?: string;
+  /** `players` is one team's roster: list it all when the search box is empty. */
+  rosterMode?: boolean;
 }) {
   const valued = items.filter((i) => i.valued.value !== null);
   const total = valued.reduce((s, i) => s + i.valued.value!, 0);
@@ -49,7 +52,7 @@ export function TradeColumn({
     <section className="flex min-w-0 flex-col gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
       <h2 className="text-sm font-semibold">{title}</h2>
       {teamControls}
-      <PlayerSearch players={players} exclude={exclude} onSelect={(p) => onAdd({ id: p.id, name: p.name, position: p.pos || null, team: p.team })} placeholder={searchPlaceholder} />
+      <PlayerSearch players={players} exclude={exclude} onSelect={(p) => onAdd({ id: p.id, name: p.name, position: p.pos || null, team: p.team })} placeholder={searchPlaceholder} browseWhenEmpty={rosterMode} />
       <AddPick seasons={pickSeasons} rounds={pickRounds} onAdd={(key) => onAdd({ id: key })} />
       {pickShortcuts}
       {items.length > 0 ? (

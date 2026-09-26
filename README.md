@@ -13,7 +13,8 @@ server route handler; the browser only talks to this app.
 Requires Node 20.9+ (developed on Node 22).
 
 ```bash
-cd trade-analyzer
+git clone https://github.com/dkakalet/Fantasy-Football-Analyzer.git
+cd Fantasy-Football-Analyzer
 npm install
 npm run dev            # http://localhost:3000
 ```
@@ -156,9 +157,9 @@ Captured 2026-09-25; details in `fixtures/README.md` and `fixtures/probes.json`.
 
 No code changes are needed.
 
-1. Push the repo to GitHub and **Import Project** in Vercel.
-2. Set **Root Directory** to `trade-analyzer`. The framework (Next.js), build command and output
-   are detected automatically.
+1. **Import Project** in Vercel and pick `dkakalet/Fantasy-Football-Analyzer`.
+2. Keep the default Root Directory (the repo root). The framework (Next.js), build command and
+   output are detected automatically.
 3. Leave `ENABLE_KTC` unset (off) unless you've cleared KTC's terms. No other env vars are needed.
 4. Deploy. The file cache switches itself off on Vercel (`VERCEL` is set there).
 

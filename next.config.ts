@@ -2,8 +2,8 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // This app lives in a subdirectory of a repo whose root has its own
-  // package-lock.json; pin the workspace root to this directory.
+  // Pin the workspace root to this directory so a lockfile in a parent
+  // folder is never mistaken for this project's.
   turbopack: {
     root: path.join(__dirname),
   },

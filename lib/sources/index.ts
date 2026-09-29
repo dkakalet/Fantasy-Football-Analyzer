@@ -24,19 +24,27 @@ export const SOURCE_NAMES: Record<SourceId, string> = {
   ktc: "KeepTradeCut",
 };
 
-/** KeepTradeCut is scraped (no official API), so it is off unless ENABLE_KTC=true. */
+/**
+ * Opt-in sources, off unless their flag is "true":
+ * - KeepTradeCut is scraped (no official API): ENABLE_KTC.
+ * - RosterAudit's terms forbid services that compete with it (it runs its own trade
+ *   calculator), so it stays off for a public deployment: ENABLE_ROSTERAUDIT.
+ */
+const OPT_IN: Partial<Record<SourceId, string>> = { ktc: "ENABLE_KTC", rosteraudit: "ENABLE_ROSTERAUDIT" };
+
 export function ktcEnabled(): boolean {
   return process.env.ENABLE_KTC === "true";
 }
 
-/** DISABLE_SOURCES=rosteraudit,dynastydealer turns off sources that are on by default. */
+/** DISABLE_SOURCES=dynastydealer,dynastyprocess turns off sources that are on by default. */
 function disabledByEnv(): Set<string> {
   return new Set((process.env.DISABLE_SOURCES ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
 }
 
 export function sourceEnabled(id: SourceId): boolean {
   if (disabledByEnv().has(id)) return false;
-  return id === "ktc" ? ktcEnabled() : true;
+  const flag = OPT_IN[id];
+  return flag ? process.env[flag] === "true" : true;
 }
 
 export function enabledSources(): SourceAdapter[] {

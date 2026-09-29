@@ -1,9 +1,9 @@
 # Trade Analyzer
 
 Scores fantasy football trades using consensus market values from public sources:
-**FantasyCalc** (primary, reference scale), **DynastyProcess** (dynasty only),
-**Dynasty Dealer** and **RosterAudit** (dynasty only), with **KeepTradeCut** as an optional
-extra source that is off by default. You can import a
+**FantasyCalc** (primary, reference scale), **DynastyProcess** (dynasty only) and
+**Dynasty Dealer**. **RosterAudit** and **KeepTradeCut** are optional extra sources that are
+off by default. You can import a
 Sleeper league to fill in the settings, the rosters, and each team's future picks.
 
 Next.js 16 (App Router) + TypeScript + Tailwind. Every third-party call goes through a
@@ -37,7 +37,8 @@ Copy `.env.example` to `.env.local` to change these. Nothing is required.
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `ENABLE_KTC` | `false` | Turns on the KeepTradeCut adapter (scraping; **check KTC's terms first**) |
-| `DISABLE_SOURCES` | (empty) | Comma-separated source IDs to turn off, e.g. `rosteraudit,dynastydealer` |
+| `ENABLE_ROSTERAUDIT` | `false` | Turns on RosterAudit (personal use; its terms forbid competing services) |
+| `DISABLE_SOURCES` | (empty) | Comma-separated default sources to turn off, e.g. `dynastydealer` |
 | `FILE_CACHE` | on | Local JSON cache in `.cache/`. `0` disables it. Always off on Vercel. |
 
 ### CLI
@@ -143,7 +144,7 @@ Captured 2026-09-25 (Dynasty Dealer and RosterAudit on 2026-09-29); details in
   - Redraft mode (`format=redraft&scoring=std|half|ppr[&sf=true]`) honours scoring and
     superflex. It is players only.
   - Zero-value deep-bench entries are skipped and don't count against the match rate.
-- **RosterAudit** (`https://rosteraudit.com/wp-json/ra/v1`; keyless for these endpoints)
+- **RosterAudit** (optional, `ENABLE_ROSTERAUDIT=true`; `https://rosteraudit.com/wp-json/ra/v1`, keyless for these endpoints)
   - Values come from an Elo engine over real Sleeper trades, keyed by `sleeper_id`.
   - `/rankings` returns about 430 entries over five pages. This app reads the raw
     `val_sf_market` / `val_1qb_market`, because the preset-adjusted `value` bakes TE premium
@@ -178,8 +179,8 @@ Captured 2026-09-25 (Dynasty Dealer and RosterAudit on 2026-09-29); details in
 ### Known limitations and assumptions
 
 - **Source disagreement** can be large. For example, Anthony Richardson in superflex was about
-  540 on FantasyCalc and about 9,700 on DynastyProcess after normalization. With four sources
-  the median (the mean of the middle two) drops the extremes. Check the breakdown before
+  540 on FantasyCalc and about 9,700 on DynastyProcess after normalization. With three or more
+  sources the median sets the extremes aside. Check the breakdown before
   trusting any single number.
 - **Flatter value curves read low at the top.** Dynasty Dealer rates depth players close to
   stars, so its factor over the top 150 is about 0.56. Its elite players then normalize to
@@ -190,8 +191,8 @@ Captured 2026-09-25 (Dynasty Dealer and RosterAudit on 2026-09-29); details in
   with three sources. A non-linear mapping would be a formula change and is not implemented.
 - **TE premium mapping** is our assumption; neither FantasyCalc nor this app defines TE+/TE++
   numerically. Sleeper `bonus_rec_te` below 0.75 → TE+ (KTC `tep`); 0.75 and up → TE++ (KTC `tepp`).
-- **Redraft:** FantasyCalc and Dynasty Dealer apply (DynastyProcess and RosterAudit are dynasty
-  only). Neither has redraft pick values, so picks show "no value".
+- **Redraft:** FantasyCalc and Dynasty Dealer apply (DynastyProcess, RosterAudit and KTC are
+  dynasty only). Neither has redraft pick values, so picks show "no value".
 - **Vercel caching:** memory only lasts as long as a warm instance, so cold starts can refetch
   the Sleeper player DB more than once a day. A durable cache (e.g. Vercel KV/Blob) would need a
   new dependency.
@@ -204,7 +205,8 @@ No code changes are needed.
 2. Keep the default Root Directory (the repo root). The framework (Next.js), build command and
    output are detected automatically.
 3. Leave `ENABLE_KTC` unset (off) unless you've cleared KTC's terms. No other env vars are needed.
-   Use `DISABLE_SOURCES` to turn a default source off.
+   Use `DISABLE_SOURCES` to turn a default source off. Leave `ENABLE_ROSTERAUDIT` off for a
+   public site.
 4. Deploy. The file cache switches itself off on Vercel (`VERCEL` is set there).
 
 ## Attribution
@@ -231,8 +233,8 @@ adjustment are this app's own.
   - Show "Values by RosterAudit.com" with a link.
   - **You may not build a service that directly competes with RosterAudit**, which runs its own
     trade calculator, or redistribute the data commercially without written permission.
-  - A public trade analyzer may count as competing, so ask them or set
-    `DISABLE_SOURCES=rosteraudit` before going public.
+  - A public trade analyzer may count as competing, so it is **off by default**. Only turn on
+    `ENABLE_ROSTERAUDIT` for a private deployment, or after RosterAudit says yes.
 - [ ] **KeepTradeCut**: no official API. **Read KTC's terms before enabling `ENABLE_KTC` or
   deploying with it.** `fixtures/ktc/` holds scraped excerpts; consider removing them before
   making the repo public.

@@ -8,7 +8,7 @@ const LINKS: Record<string, { label: string; href: string }> = {
   ktc: { label: "KeepTradeCut", href: "https://keeptradecut.com" },
 };
 
-const DEFAULT_ENABLED = ["fantasycalc", "dynastyprocess", "dynastydealer", "rosteraudit"];
+const DEFAULT_ENABLED = ["fantasycalc", "dynastyprocess", "dynastydealer"];
 
 /**
  * Credits every enabled value source. FantasyCalc requires a visible link on each

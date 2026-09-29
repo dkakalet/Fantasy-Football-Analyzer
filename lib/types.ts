@@ -15,7 +15,7 @@ export interface LeagueSettings {
   tep: TePremium;
 }
 
-export type SourceId = "fantasycalc" | "dynastyprocess" | "ktc";
+export type SourceId = "fantasycalc" | "dynastyprocess" | "dynastydealer" | "rosteraudit" | "ktc";
 
 export type AssetKind = "player" | "pick";
 

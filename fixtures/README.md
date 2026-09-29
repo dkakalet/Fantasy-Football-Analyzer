@@ -68,6 +68,35 @@ Findings:
 - `traded_picks` includes already-used picks (2026, draft `complete`). Future seasons seen
   across 26 leagues: 2027, 2028, 2029.
 
+## dynastydealer/
+
+`GET https://www.dynastydealer.com/api/player-values`, captured 2026-09-29 (`--only dynastydealer`).
+
+| File | Request | Trim |
+| --- | --- | --- |
+| `player-values-dynasty.json` | `?perSlot=true` | top 300 players + all 84 picks |
+| `player-values-redraft-half.json` | `?format=redraft&scoring=half` | top 150 |
+| `player-values-redraft-ppr-sf.json` | `?format=redraft&scoring=ppr&sf=true` | top 60 |
+
+Findings:
+- 1,000 entries per request, with `sleeper_id` on every player.
+- Pick IDs are `pick_2027_1_early` (tier) or `pick_2027_1_slot_01` (exact slot, next draft only).
+- In dynasty mode `sf=true` and `tep=true` don't change any value: it's one blended market.
+
+## rosteraudit/
+
+`https://rosteraudit.com/wp-json/ra/v1`, captured 2026-09-29 (`--only rosteraudit`).
+
+| File | Request | Trim |
+| --- | --- | --- |
+| `rankings-sf.json` | `/rankings?format=sf&per_page=100&page=1..5` | all entries; ID, name, position, team, `val_sf_market`, `val_1qb_market` |
+| `picks.json` | `/picks` | all 45 (2027–2029, rounds 1–5, early/mid/late) |
+
+Findings:
+- `/rankings` includes 36 pick rows with `sleeper_id: null`, which the adapter ignores.
+- `format_key` and `league_size` don't change values. The Superflex preset `value` includes TE
+  premium, so the adapter reads the market fields.
+
 ## ktc/
 
 From `https://keeptradecut.com/dynasty-rankings`, the JSON embedded in

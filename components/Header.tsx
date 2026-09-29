@@ -39,11 +39,11 @@ export function Header({ health, settings }: { health: Health | null; settings: 
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
       <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="sm:shrink-0">
           <h1 className="text-lg font-semibold">Trade Analyzer</h1>
           <p className="text-xs text-zinc-500">{settingsSummary(settings)}</p>
         </div>
-        <div className="flex flex-wrap gap-1.5" aria-label="Data source status">
+        <div className="flex flex-wrap gap-1.5 sm:justify-end" aria-label="Data source status">
           {health ? (
             <>
               {health.sources.map((s) => (

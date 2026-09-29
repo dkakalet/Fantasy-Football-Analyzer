@@ -1,9 +1,10 @@
 // Fetch every data source live, trim the responses, and write them to fixtures/.
 // Also writes fixtures/probes.json: a summary of what each live call returned.
 //
-//   npm run fixtures                       # FantasyCalc, DynastyProcess, Sleeper
+//   npm run fixtures                       # every default source + Sleeper
 //   npm run fixtures -- --user <sleeper username> --league <league_id>
-//   npm run fixtures -- --only ktc         # KeepTradeCut only (opt-in: check KTC's terms first)
+//   npm run fixtures -- --only dynastydealer,rosteraudit   # just those sections
+//   npm run fixtures -- --only ktc         # KeepTradeCut (opt-in: check KTC's terms first)
 //
 // Sleeper fixtures are anonymized (display names / team names / league names
 // replaced) so third-party usernames aren't committed.
@@ -13,9 +14,11 @@ import path from "node:path";
 import { parseCsv } from "../lib/csv";
 import { fetchJson, fetchText, HttpError } from "../lib/http";
 import { DEFAULT_SETTINGS } from "../lib/settings";
+import { dynastyDealerUrl, type DdEntry } from "../lib/sources/dynastydealer";
 import { DP_FILES, DP_ID_COLUMNS } from "../lib/sources/dynastyprocess";
 import { fantasyCalcUrl, type FcRecord } from "../lib/sources/fantasycalc";
 import { extractKtcPlayers, KTC_URL, type KtcPlayer } from "../lib/sources/ktc";
+import { RA_BASE, type RaPick, type RaPlayer } from "../lib/sources/rosteraudit";
 import {
   sleeperUrls,
   type SleeperDraft,
@@ -38,7 +41,7 @@ const arg = (name: string, fallback: string) => {
 // Public account with many dynasty leagues; any Sleeper username works.
 const SLEEPER_USER = arg("user", "keeptradecut");
 const SLEEPER_LEAGUE = arg("league", "1357193858412220416");
-const ONLY = arg("only", "");
+const ONLY = new Set(arg("only", "").split(",").filter(Boolean));
 
 const probes: Record<string, unknown> = { fetchedAt: new Date().toISOString() };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -296,13 +299,94 @@ async function ktc() {
   });
 }
 
+// ------------------------------------------------------------- Dynasty Dealer
+
+async function dynastyDealer() {
+  console.log("Dynasty Dealer");
+  const trim = (e: DdEntry) => ({
+    sleeper_id: e.sleeper_id,
+    name: e.name,
+    position: e.position,
+    team: e.team,
+    base_value: e.base_value,
+    current_value: e.current_value,
+  });
+  const out: Record<string, unknown> = {};
+  const variants: [string, LeagueSettings, number][] = [
+    ["dynasty", DEFAULT_SETTINGS, 300],
+    ["redraft-half", { ...DEFAULT_SETTINGS, format: "redraft" }, 150],
+    ["redraft-ppr-sf", { ...DEFAULT_SETTINGS, format: "redraft", ppr: 1, numQbs: 2 }, 60],
+  ];
+  for (const [name, settings, keepPlayers] of variants) {
+    const url = dynastyDealerUrl(settings);
+    const res = await fetchJson<{ players: DdEntry[]; scoringSettings?: unknown; format?: unknown; timestamp?: string }>(url);
+    let kept = 0;
+    // Top players (the list is sorted by value) plus every pick.
+    const rows = res.players.filter((e) => e.position === "PICK" || ++kept <= keepPlayers).map(trim);
+    await save(`dynastydealer/player-values-${name}.json`, `[\n${rows.map((r) => JSON.stringify(r)).join(",\n")}\n]\n`);
+    const count: Record<string, number> = {};
+    for (const e of res.players) count[e.position] = (count[e.position] ?? 0) + 1;
+    out[name] = {
+      url,
+      entries: res.players.length,
+      byPosition: count,
+      echoedSettings: res.scoringSettings ?? res.format,
+      timestamp: res.timestamp,
+      top: res.players.slice(0, 3).map((e) => `${e.name} ${e.current_value}`),
+    };
+    await sleep(500);
+  }
+  probes.dynastydealer = out;
+}
+
+// ---------------------------------------------------------------- RosterAudit
+
+async function rosterAudit() {
+  console.log("RosterAudit");
+  const players: RaPlayer[] = [];
+  let meta: Record<string, unknown> = {};
+  for (let page = 1, pages = 1; page <= pages && page <= 20; page++) {
+    const res = await fetchJson<{ players: RaPlayer[]; total_pages: number } & Record<string, unknown>>(
+      `${RA_BASE}/rankings?format=sf&per_page=100&page=${page}`,
+    );
+    players.push(...res.players);
+    pages = res.total_pages;
+    if (page === 1) meta = Object.fromEntries(Object.entries(res).filter(([k]) => k !== "players"));
+    await sleep(300);
+  }
+  const picks = (await fetchJson<{ picks: RaPick[] }>(`${RA_BASE}/picks`)).picks;
+  const trimmed = players.map((p) => ({
+    sleeper_id: p.sleeper_id,
+    name: p.name,
+    position: p.position,
+    team: p.team,
+    val_sf_market: p.val_sf_market,
+    val_1qb_market: p.val_1qb_market,
+  }));
+  await save("rosteraudit/rankings-sf.json", `[\n${trimmed.map((r) => JSON.stringify(r)).join(",\n")}\n]\n`);
+  await save("rosteraudit/picks.json", picks.map(({ pick_season, pick_round, pick_slot, val_sf, val_1qb, label }) => ({ pick_season, pick_round, pick_slot, val_sf, val_1qb, label })));
+  probes.rosteraudit = {
+    rankingsMeta: meta,
+    players: players.length,
+    picks: picks.length,
+    pickSeasons: [...new Set(picks.map((p) => p.pick_season))],
+    pickSlots: [...new Set(picks.map((p) => String(p.pick_slot)))],
+  };
+}
+
 async function main() {
-  if (ONLY === "ktc") return ktc();
-  const fc = await fantasyCalc();
-  const dpSleeperIds = await dynastyProcess();
-  const fcSleeperIds = fc.map((r) => r.player.sleeperId).filter((x): x is string => !!x && !x.startsWith("FP_"));
-  await sleeper(new Set([...dpSleeperIds, ...fcSleeperIds]));
-  await save("probes.json", probes);
+  const run = (name: string) => ONLY.size === 0 || ONLY.has(name);
+  if (ONLY.has("ktc")) await ktc();
+  if (run("dynastydealer")) await dynastyDealer();
+  if (run("rosteraudit")) await rosterAudit();
+  if (run("fantasycalc") || run("dynastyprocess") || run("sleeper")) {
+    const fc = await fantasyCalc();
+    const dpSleeperIds = await dynastyProcess();
+    const fcSleeperIds = fc.map((r) => r.player.sleeperId).filter((x): x is string => !!x && !x.startsWith("FP_"));
+    await sleeper(new Set([...dpSleeperIds, ...fcSleeperIds]));
+  }
+  // A partial run writes its probes next to the others instead of replacing probes.json.
+  await save(ONLY.size ? `probes.${[...ONLY].sort().join("+")}.json` : "probes.json", probes);
 }
 
 main().catch((e) => {

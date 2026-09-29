@@ -8,6 +8,8 @@ import { trimIdRows } from "../sources/dynastyprocess";
 import type { FcRecord } from "../sources/fantasycalc";
 import type { SleeperPlayer } from "../sleeper/players";
 import type { KtcPlayer } from "../sources/ktc";
+import type { DdEntry } from "../sources/dynastydealer";
+import type { RaRaw } from "../sources/rosteraudit";
 
 const ROOT = path.join(__dirname, "..", "..", "fixtures");
 export const FIXTURE_TIME = Date.parse("2026-09-25T12:00:00Z");
@@ -32,3 +34,11 @@ export const sleeperPlayersFixture = () => jsonFixture<SleeperPlayer[]>("sleeper
 export const asCached = <T>(value: T): Cached<T> => ({ value, fetchedAt: FIXTURE_TIME, from: "network" });
 
 export const ktcFixture = () => jsonFixture<KtcPlayer[]>("ktc/ktc-players.json");
+
+export const ddFixture = (variant: "dynasty" | "redraft-half" | "redraft-ppr-sf" = "dynasty") =>
+  jsonFixture<DdEntry[]>(`dynastydealer/player-values-${variant}.json`);
+
+export const raFixture = (): RaRaw => ({
+  players: jsonFixture<RaRaw["players"]>("rosteraudit/rankings-sf.json"),
+  picks: jsonFixture<RaRaw["picks"]>("rosteraudit/picks.json"),
+});

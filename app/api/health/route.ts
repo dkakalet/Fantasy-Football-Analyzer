@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { parseSettings } from "@/lib/settings";
 import { fetchSleeperPlayers } from "@/lib/sleeper/players";
-import { ktcEnabled } from "@/lib/sources";
+import { disabledSourceIds, SOURCE_NAMES } from "@/lib/sources";
 import { getValuation, type SourceMeta } from "@/lib/valuation";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     cache: s.cache,
     ...(s.error ? { error: s.error } : {}),
   }));
-  if (!ktcEnabled()) sources.push({ id: "ktc", name: "KeepTradeCut", status: "disabled" });
+  for (const id of disabledSourceIds()) sources.push({ id, name: SOURCE_NAMES[id], status: "disabled" });
 
   return Response.json({
     checkedAt: new Date().toISOString(),

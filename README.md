@@ -1,8 +1,9 @@
 # Trade Analyzer
 
 Scores fantasy football trades using consensus market values from public sources:
-**FantasyCalc** (primary, reference scale) and **DynastyProcess** (dynasty only), with
-**KeepTradeCut** as an optional third source that is off by default. You can import a
+**FantasyCalc** (primary, reference scale), **DynastyProcess** (dynasty only),
+**Dynasty Dealer** and **RosterAudit** (dynasty only), with **KeepTradeCut** as an optional
+extra source that is off by default. You can import a
 Sleeper league to fill in the settings, the rosters, and each team's future picks.
 
 Next.js 16 (App Router) + TypeScript + Tailwind. Every third-party call goes through a
@@ -36,6 +37,7 @@ Copy `.env.example` to `.env.local` to change these. Nothing is required.
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `ENABLE_KTC` | `false` | Turns on the KeepTradeCut adapter (scraping; **check KTC's terms first**) |
+| `DISABLE_SOURCES` | (empty) | Comma-separated source IDs to turn off, e.g. `rosteraudit,dynastydealer` |
 | `FILE_CACHE` | on | Local JSON cache in `.cache/`. `0` disables it. Always off on Vercel. |
 
 ### CLI
@@ -60,6 +62,7 @@ per-source breakdown in the UI and the CLI shows each step.
 2. **Match** players to Sleeper `player_id`s:
    - FantasyCalc: `player.sleeperId`.
    - DynastyProcess: `fp_id` → `db_playerids.csv` → `sleeper_id`, then normalized name + position.
+   - Dynasty Dealer and RosterAudit: `sleeper_id` in the response.
    - KTC: `mflid` → crosswalk `mfl_id` → `sleeper_id`, then name.
 3. **Normalize** to FantasyCalc's scale: `factor = Σ ref ÷ Σ source` over the top N = 150
    players (ranked by FantasyCalc value) that both list. Picks use the same factor. If
@@ -113,7 +116,8 @@ locally. If a refresh fails, the last good copy is served and marked stale in th
 
 ## Data sources: what the live data showed
 
-Captured 2026-09-25; details in `fixtures/README.md` and `fixtures/probes.json`.
+Captured 2026-09-25 (Dynasty Dealer and RosterAudit on 2026-09-29); details in
+`fixtures/README.md` and the `fixtures/probes*.json` files.
 
 - **FantasyCalc** (`GET https://api.fantasycalc.com/values/current`)
   - Params: `isDynasty`, `numQbs`, `numTeams` (8/10/12/14), `ppr` (0/0.5/1), and a
@@ -128,6 +132,25 @@ Captured 2026-09-25; details in `fixtures/README.md` and `fixtures/probes.json`.
   - Its `2026 Pick x.yy` rows are for a draft that has already happened, so they're ignored.
   - It has one scoring baseline, so PPR, team count and TE premium are always marked approx.
     Dynasty only.
+- **Dynasty Dealer** (`GET https://www.dynastydealer.com/api/player-values`; keyless)
+  - Values come from real Sleeper trades. The top 1,000 assets carry a `sleeper_id`, and
+    `current_value` (the trade-derived `base_value` plus a few percent of community votes)
+    is the value used.
+  - **Dynasty mode is one blended market.** `sf=true` and `tep=true` are echoed back but don't
+    change any value, so QB format, PPR, team count and TE premium are all marked approx.
+  - Picks: tiers for 2027–2029, rounds 1–4. `perSlot=true` adds exact slots (1.01 to 4.12) for
+    the next draft.
+  - Redraft mode (`format=redraft&scoring=std|half|ppr[&sf=true]`) honours scoring and
+    superflex. It is players only.
+  - Zero-value deep-bench entries are skipped and don't count against the match rate.
+- **RosterAudit** (`https://rosteraudit.com/wp-json/ra/v1`; keyless for these endpoints)
+  - Values come from an Elo engine over real Sleeper trades, keyed by `sleeper_id`.
+  - `/rankings` returns about 430 entries over five pages. This app reads the raw
+    `val_sf_market` / `val_1qb_market`, because the preset-adjusted `value` bakes TE premium
+    into Superflex. `format_key` and `league_size` are accepted but change nothing.
+  - Its pick rows are ignored. `/picks` gives 2027–2029, rounds 1–5, early/mid/late, with
+    separate Superflex and 1QB values.
+  - Dynasty only. PPR, team count and TE premium are marked approx.
 - **KeepTradeCut** (optional, `lib/sources/ktc.ts` is the only file that scrapes it)
   - Reads the JSON embedded in `https://keeptradecut.com/dynasty-rankings`.
   - Baseline is 12 teams / 0.5 PPR, with separate 1QB and Superflex lists and TE-premium
@@ -138,17 +161,37 @@ Captured 2026-09-25; details in `fixtures/README.md` and `fixtures/probes.json`.
   - No endpoint states the tradable pick window. Live leagues showed three future seasons, so
     that is a constant (`FUTURE_PICK_SEASONS`).
 
+### Sources evaluated but not added (2026-09-29)
+
+| Source | Why not |
+| --- | --- |
+| Dynasty Trade Values (`dynastytradevalues.com/wp-json/dtc/v1/public`) | Keyless, but its values are derived from ADP, not trades. No Sleeper IDs (name matching only), and three Superflex QBs are capped at 10,000. |
+| Fantasy Football Calculator ADP API | Official and free, but it gives draft position, not trade value. In-season samples are tiny (29 PPR and 16 dynasty players), and there are no Sleeper IDs. |
+| MyFantasyLeague `export?TYPE=adp/aav` | Official, but draft/auction data. `PERIOD=RECENT` is empty in-season, and keeper data mixes startup and rookie-only drafts. |
+| Fantasy Nerds | Needs a paid API key; rankings only, no trade values. |
+| FantasyPros | API is partner-only; its consensus rankings already feed DynastyProcess. |
+| Dynasty Daddy | No public API; its data is scraped from KTC. |
+| ESPN / Yahoo | Undocumented or authenticated platform APIs, not value sources. |
+| DraftSharks, DLF, Dynasty Trade Calculator, and others | Paid, with no API. |
+| Parse.bot "APIs" for KTC / FantasyCalc / RosterAudit | Third-party scraper wrappers, not official. |
+
 ### Known limitations and assumptions
 
 - **Source disagreement** can be large. For example, Anthony Richardson in superflex was about
-  540 on FantasyCalc and about 9,700 on DynastyProcess after normalization. With two sources the
-  consensus is their mean. Check the breakdown before trusting any single number.
+  540 on FantasyCalc and about 9,700 on DynastyProcess after normalization. With four sources
+  the median (the mean of the middle two) drops the extremes. Check the breakdown before
+  trusting any single number.
+- **Flatter value curves read low at the top.** Dynasty Dealer rates depth players close to
+  stars, so its factor over the top 150 is about 0.56. Its elite players then normalize to
+  roughly half of the other sources (Ja'Marr Chase ≈ 5,300 vs 8,800–10,800), while depth
+  players read high. With four sources the median usually sets it aside.
 - **KTC's values top out at 9,999**, so one linear factor makes its elite players read low
   (e.g. Josh Allen ≈ 7,150 vs 11,056 on FantasyCalc in superflex). The median limits the effect
   with three sources. A non-linear mapping would be a formula change and is not implemented.
 - **TE premium mapping** is our assumption; neither FantasyCalc nor this app defines TE+/TE++
   numerically. Sleeper `bonus_rec_te` below 0.75 → TE+ (KTC `tep`); 0.75 and up → TE++ (KTC `tepp`).
-- **Redraft:** only FantasyCalc applies, and it has no pick values, so picks show "no value".
+- **Redraft:** FantasyCalc and Dynasty Dealer apply (DynastyProcess and RosterAudit are dynasty
+  only). Neither has redraft pick values, so picks show "no value".
 - **Vercel caching:** memory only lasts as long as a warm instance, so cold starts can refetch
   the Sleeper player DB more than once a day. A durable cache (e.g. Vercel KV/Blob) would need a
   new dependency.
@@ -161,12 +204,13 @@ No code changes are needed.
 2. Keep the default Root Directory (the repo root). The framework (Next.js), build command and
    output are detected automatically.
 3. Leave `ENABLE_KTC` unset (off) unless you've cleared KTC's terms. No other env vars are needed.
+   Use `DISABLE_SOURCES` to turn a default source off.
 4. Deploy. The file cache switches itself off on Vercel (`VERCEL` is set there).
 
 ## Attribution
 
-The footer on every page credits and links each enabled source (FantasyCalc, DynastyProcess,
-KeepTradeCut when enabled) and Sleeper. It also says that normalization and the consolidation
+The footer on every page reads "Values by …" and links each enabled source (FantasyCalc,
+DynastyProcess, Dynasty Dealer, RosterAudit.com, KeepTradeCut when enabled), plus Sleeper. It also says that normalization and the consolidation
 adjustment are this app's own.
 
 ## Before any public deployment: confirm usage terms
@@ -179,6 +223,16 @@ adjustment are this app's own.
     person, not AI.
 - [ ] **DynastyProcess**: the `dynastyprocess/data` repo is licensed **GPL-3.0**. Check what
   that means for your use, including the excerpts committed under `fixtures/dynastyprocess/`.
+- [ ] **Dynasty Dealer**: free for any use with a visible link to dynastydealer.com (this is
+  from the API author's published announcement; the site's own terms page renders client-side
+  and couldn't be read here). Confirm on the site.
+- [ ] **RosterAudit** ([developers](https://rosteraudit.com/developers/), [terms](https://rosteraudit.com/terms/)):
+  - Personal tools are allowed.
+  - Show "Values by RosterAudit.com" with a link.
+  - **You may not build a service that directly competes with RosterAudit**, which runs its own
+    trade calculator, or redistribute the data commercially without written permission.
+  - A public trade analyzer may count as competing, so ask them or set
+    `DISABLE_SOURCES=rosteraudit` before going public.
 - [ ] **KeepTradeCut**: no official API. **Read KTC's terms before enabling `ENABLE_KTC` or
   deploying with it.** `fixtures/ktc/` holds scraped excerpts; consider removing them before
   making the repo public.
@@ -197,7 +251,8 @@ app/
   api/sleeper/league/[leagueId]    settings, teams, rosters, pick inventory
 components/                        header pills, settings, Sleeper import, trade columns, results
 lib/
-  sources/                         fantasycalc.ts, dynastyprocess.ts, ktc.ts (common SourceAdapter interface)
+  sources/                         fantasycalc.ts, dynastyprocess.ts, dynastydealer.ts, rosteraudit.ts,
+                                   ktc.ts (common SourceAdapter interface; registry in index.ts)
   sleeper/                         client, player DB, league mapping, pick inventory
   normalize.ts consensus.ts scoring.ts valuation.ts picks.ts trade.ts cache.ts
 fixtures/                          trimmed live responses the types and tests are built from

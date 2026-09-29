@@ -2,7 +2,8 @@
 // caching is handled explicitly by lib/cache.ts so TTLs are visible in one place.
 
 const DEFAULT_TIMEOUT_MS = 20_000;
-const USER_AGENT = "trade-analyzer/0.1 (personal, non-commercial)";
+// Descriptive, as RosterAudit asks of API clients.
+const USER_AGENT = "trade-analyzer/0.1 (+https://github.com/dkakalet/Fantasy-Football-Analyzer; personal, non-commercial)";
 
 export class HttpError extends Error {
   constructor(

@@ -4,7 +4,7 @@ import { ALLOWED_PPR, ALLOWED_TEAMS, TEP_VALUES } from "@/lib/settings";
 import type { LeagueSettings } from "@/lib/types";
 import type { SourceMeta } from "@/lib/valuation";
 
-const APPROX_LABEL: Record<string, string> = { ppr: "PPR", teams: "team count", tep: "TE premium" };
+const APPROX_LABEL: Record<string, string> = { qb: "QB format (one blended market)", ppr: "PPR", teams: "team count", tep: "TE premium" };
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

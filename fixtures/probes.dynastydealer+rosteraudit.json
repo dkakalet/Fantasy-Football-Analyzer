@@ -1,0 +1,95 @@
+{
+ "fetchedAt": "2026-09-29T03:55:56.609Z",
+ "dynastydealer": {
+  "dynasty": {
+   "url": "https://www.dynastydealer.com/api/player-values?perSlot=true",
+   "entries": 1000,
+   "byPosition": {
+    "QB": 129,
+    "RB": 219,
+    "WR": 390,
+    "PICK": 84,
+    "TE": 178
+   },
+   "echoedSettings": {
+    "isSuperflex": false,
+    "isTePremium": false
+   },
+   "timestamp": "2026-09-29T03:55:57.046Z",
+   "top": [
+    "Josh Allen 9821",
+    "Jahmyr Gibbs 9819",
+    "Jaxon Smith-Njigba 9772"
+   ]
+  },
+  "redraft-half": {
+   "url": "https://www.dynastydealer.com/api/player-values?format=redraft&scoring=half",
+   "entries": 1000,
+   "byPosition": {
+    "RB": 260,
+    "WR": 400,
+    "TE": 211,
+    "QB": 129
+   },
+   "echoedSettings": {
+    "mode": "redraft",
+    "scoring": "half",
+    "isSuperflex": false
+   },
+   "timestamp": "2026-09-29T03:55:57.763Z",
+   "top": [
+    "Jahmyr Gibbs 10000",
+    "Bijan Robinson 9760",
+    "Ja'Marr Chase 9329"
+   ]
+  },
+  "redraft-ppr-sf": {
+   "url": "https://www.dynastydealer.com/api/player-values?format=redraft&scoring=ppr&sf=true",
+   "entries": 1000,
+   "byPosition": {
+    "QB": 129,
+    "RB": 260,
+    "WR": 400,
+    "TE": 211
+   },
+   "echoedSettings": {
+    "mode": "redraft",
+    "scoring": "ppr",
+    "isSuperflex": true
+   },
+   "timestamp": "2026-09-29T03:55:58.452Z",
+   "top": [
+    "Josh Allen 10000",
+    "Bijan Robinson 9888",
+    "Jahmyr Gibbs 9779"
+   ]
+  }
+ },
+ "rosteraudit": {
+  "rankingsMeta": {
+   "total": 430,
+   "page": 1,
+   "per_page": 100,
+   "total_pages": 5,
+   "format": "sf",
+   "preset": "sf-ppr-tep",
+   "preset_label": "SF PPR TEP",
+   "league_adjusted": true,
+   "idp_live": false,
+   "attribution": "Values by RosterAudit.com",
+   "attribution_url": "https://rosteraudit.com"
+  },
+  "players": 430,
+  "picks": 45,
+  "pickSeasons": [
+   2027,
+   2028,
+   2029
+  ],
+  "pickSlots": [
+   "early",
+   "mid",
+   "late"
+  ]
+ }
+}

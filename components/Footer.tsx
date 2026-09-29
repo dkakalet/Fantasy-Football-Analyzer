@@ -3,12 +3,17 @@ import type { HealthSource } from "./types";
 const LINKS: Record<string, { label: string; href: string }> = {
   fantasycalc: { label: "FantasyCalc", href: "https://fantasycalc.com" },
   dynastyprocess: { label: "DynastyProcess", href: "https://dynastyprocess.com" },
+  dynastydealer: { label: "Dynasty Dealer", href: "https://www.dynastydealer.com" },
+  rosteraudit: { label: "RosterAudit.com", href: "https://rosteraudit.com" },
   ktc: { label: "KeepTradeCut", href: "https://keeptradecut.com" },
 };
 
-const DEFAULT_ENABLED = ["fantasycalc", "dynastyprocess"];
+const DEFAULT_ENABLED = ["fantasycalc", "dynastyprocess", "dynastydealer", "rosteraudit"];
 
-/** Credits every enabled value source (FantasyCalc requires a visible link on each page showing its data). */
+/**
+ * Credits every enabled value source. FantasyCalc requires a visible link on each
+ * page showing its data; Dynasty Dealer and RosterAudit ask for "Values by …" links.
+ */
 export function Footer({ sources }: { sources: HealthSource[] | null }) {
   const enabled = sources ? sources.filter((s) => s.status !== "disabled").map((s) => s.id) : DEFAULT_ENABLED;
   const links = enabled.map((id) => LINKS[id]).filter(Boolean);
@@ -16,7 +21,7 @@ export function Footer({ sources }: { sources: HealthSource[] | null }) {
     <footer className="mt-auto border-t border-zinc-200 dark:border-zinc-800">
       <div className="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-4 text-xs text-zinc-500">
         <p>
-          Trade values from{" "}
+          Values by{" "}
           {links.map((l, i) => (
             <span key={l.href}>
               {i > 0 && (i === links.length - 1 ? " and " : ", ")}

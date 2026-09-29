@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeScaleFactor } from "./normalize";
+import { applyRankMap, computeScaleFactor, fitRankMap } from "./normalize";
 import { DEFAULT_SETTINGS } from "./settings";
 import { createDynastyProcessSource, mapDynastyProcess } from "./sources/dynastyprocess";
 import { createFantasyCalcSource, mapFantasyCalc } from "./sources/fantasycalc";
@@ -15,14 +15,22 @@ const dp = createDynastyProcessSource({
 });
 const now = new Date(FIXTURE_TIME);
 
-async function build(settings: LeagueSettings = DEFAULT_SETTINGS, results?: SourceResult[]) {
+async function build(settings: LeagueSettings = DEFAULT_SETTINGS, results?: SourceResult[], method?: "rank" | "linear") {
   return buildValuation({
     settings,
     results: results ?? (await Promise.all([fc, dp].map((a) => loadSource(a, settings)))),
     sleeperPlayers: sleeperPlayersFixture(),
+    method,
     now,
   });
 }
+
+const fixturePlayers = () => ({
+  fc: new Map(mapFantasyCalc(fcFixture()).values.filter((x) => x.kind === "player").map((x) => [x.assetId, x.rawValue])),
+  dp: new Map(
+    mapDynastyProcess(dpFixture(), dpIdsFixture(), sleeperPlayersFixture(), 1).values.filter((x) => x.kind === "player").map((x) => [x.assetId, x.rawValue]),
+  ),
+});
 
 describe("adapters on fixtures", () => {
   it("FantasyCalc: every player joins on sleeperId, every pick maps to a key", () => {
@@ -55,25 +63,42 @@ describe("adapters on fixtures", () => {
 });
 
 describe("buildValuation", () => {
-  it("uses FantasyCalc as the reference and scales DynastyProcess by the documented factor", async () => {
+  it("uses FantasyCalc as the reference and rank-matches DynastyProcess onto it (default)", async () => {
     const v = await build();
     expect(v.reference).toBe("fantasycalc");
+    expect(v.method).toBe("rank");
     const [fcMeta, dpMeta] = v.sources;
-    expect(fcMeta).toMatchObject({ id: "fantasycalc", isReference: true, factor: 1, status: "ok" });
-    expect(dpMeta).toMatchObject({ id: "dynastyprocess", status: "ok", factorPlayers: 150 });
+    expect(fcMeta).toMatchObject({ id: "fantasycalc", isReference: true, status: "ok", normalization: { method: "reference", factor: 1 } });
+    const { fc: fcPlayers, dp: dpPlayers } = fixturePlayers();
+    const overlap = [...dpPlayers.keys()].filter((id) => fcPlayers.has(id)).length;
+    expect(dpMeta).toMatchObject({ id: "dynastyprocess", status: "ok", normalization: { method: "rank", overlap, used: overlap, factor: null } });
 
-    // Recompute the factor independently from the adapter output.
-    const fcPlayers = new Map(mapFantasyCalc(fcFixture()).values.filter((x) => x.kind === "player").map((x) => [x.assetId, x.rawValue]));
-    const dpPlayers = new Map(
-      mapDynastyProcess(dpFixture(), dpIdsFixture(), sleeperPlayersFixture(), 1).values.filter((x) => x.kind === "player").map((x) => [x.assetId, x.rawValue]),
-    );
-    expect(dpMeta.factor).toBeCloseTo(computeScaleFactor(fcPlayers, dpPlayers, 150).factor!);
-
-    // Every normalized value is raw × factor.
+    // Every normalized value is the reference value at the same rank among shared players.
+    const map = fitRankMap(fcPlayers, dpPlayers);
     const asset = v.assets.find((a) => a.name === "Ja'Marr Chase")!;
     const dpVal = asset.sources.find((s) => s.source === "dynastyprocess")!;
-    expect(dpVal.normalized).toBeCloseTo(dpVal.raw * dpMeta.factor!);
+    expect(dpVal.normalized).toBeCloseTo(applyRankMap(map, dpVal.raw).value);
+    expect(dpVal.sharedRank).toBeCloseTo(applyRankMap(map, dpVal.raw).rank);
+    expect(asset.sources[0].sharedRank).toBeUndefined(); // the reference is not remapped
     expect(asset.value).toBeCloseTo((asset.sources[0].normalized + asset.sources[1].normalized) / 2);
+
+    // DynastyProcess's top shared player gets FantasyCalc's top shared value.
+    const topDp = [...dpPlayers.entries()].filter(([id]) => fcPlayers.has(id)).sort((a, b) => b[1] - a[1])[0];
+    const topFc = Math.max(...[...fcPlayers.entries()].filter(([id]) => dpPlayers.has(id)).map(([, x]) => x));
+    const topAsset = v.assets.find((a) => a.id === topDp[0])!;
+    expect(topAsset.sources.find((s) => s.source === "dynastyprocess")!.normalized).toBeCloseTo(topFc);
+  });
+
+  it("NORMALIZATION=linear keeps the previous factor math", async () => {
+    const v = await build(DEFAULT_SETTINGS, undefined, "linear");
+    const dpMeta = v.sources[1];
+    const { fc: fcPlayers, dp: dpPlayers } = fixturePlayers();
+    const factor = computeScaleFactor(fcPlayers, dpPlayers, 150).factor!;
+    expect(dpMeta.normalization).toMatchObject({ method: "linear", used: 150 });
+    expect(dpMeta.normalization!.factor).toBeCloseTo(factor);
+    const dpVal = v.assets.find((a) => a.name === "Ja'Marr Chase")!.sources.find((s) => s.source === "dynastyprocess")!;
+    expect(dpVal.normalized).toBeCloseTo(dpVal.raw * factor);
+    expect(dpVal.sharedRank).toBeUndefined();
   });
 
   it("V_ref is the top consensus asset and assets are sorted by value", async () => {
@@ -128,7 +153,7 @@ describe("buildValuation", () => {
   it("falls back to the next source as reference when FantasyCalc is down", async () => {
     const v = await build(DEFAULT_SETTINGS, [{ adapter: fc, error: "timeout" }, await loadSource(dp, DEFAULT_SETTINGS)]);
     expect(v.reference).toBe("dynastyprocess");
-    expect(v.sources[1].factor).toBe(1);
+    expect(v.sources[1].normalization).toMatchObject({ method: "reference", factor: 1 });
     expect(v.warnings[0]).toContain("DynastyProcess scale");
   });
 });

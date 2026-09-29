@@ -106,7 +106,7 @@ describe("valuation with the four default sources", () => {
       ["dynastydealer", "ok"],
       ["rosteraudit", "ok"],
     ]);
-    for (const s of v.sources.slice(1)) expect(s.factorPlayers).toBe(150);
+    for (const s of v.sources.slice(1)) expect(s.normalization).toMatchObject({ method: "rank" });
     const four = v.assets.find((a) => a.kind === "player" && a.sources.length === 4)!;
     const n = four.sources.map((s) => s.normalized).sort((a, b) => a - b);
     expect(four.value).toBeCloseTo((n[1] + n[2]) / 2);

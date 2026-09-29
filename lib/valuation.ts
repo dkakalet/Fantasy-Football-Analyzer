@@ -2,11 +2,20 @@
 // settings. `buildValuation` is pure (tested against fixtures); `getValuation`
 // does the fetching.
 //
-// Every number is traceable: raw source value -> × scale factor -> normalized
-// value -> median across sources -> consensus value.
+// Every number is traceable: raw source value -> normalized onto the reference
+// scale (rank matching by default; see lib/normalize.ts) -> median across sources
+// -> consensus value.
 
 import { consensus } from "./consensus";
-import { computeScaleFactor, DEFAULT_TOP_N } from "./normalize";
+import {
+  DEFAULT_NORMALIZATION,
+  DEFAULT_TOP_N,
+  fitNormalizer,
+  MIN_SHARED,
+  referenceNormalizer,
+  type NormalizationMethod,
+  type Normalizer,
+} from "./normalize";
 import { fallbackFirstPickSeason, parsePickKey, pickLabel, resolvePick, slotKey, TIERS, tierKey, type PickVia } from "./picks";
 import { fetchSleeperPlayers, type SleeperPlayer } from "./sleeper/players";
 import { enabledSources, SOURCE_ORDER } from "./sources";
@@ -23,11 +32,16 @@ export interface SourceMeta {
   /** Settings this source approximates (e.g. "ppr", "teams", "tep"). */
   approximated: string[];
   isReference: boolean;
-  /** Scale factor to the reference (1 for the reference itself). */
-  factor: number | null;
-  /** Players shared with the reference, and how many of them fit the factor. */
-  overlap: number;
-  factorPlayers: number;
+  /** How this source was put on the reference scale; null when it couldn't be. */
+  normalization: {
+    method: Normalizer["method"];
+    /** Players shared with the reference. */
+    overlap: number;
+    /** Players the mapping was fitted on. */
+    used: number;
+    /** Linear method only (1 for the reference). */
+    factor: number | null;
+  } | null;
   players: number;
   picks: number;
   /** Share of the source's player records matched to a player in the Sleeper DB. */
@@ -46,6 +60,11 @@ export interface SourceValue {
   raw: number;
   normalized: number;
   sourceName: string;
+  /**
+   * Rank method: where this value falls among the players both this source and the
+   * reference list (1 = best). The normalized value is the reference's value at that rank.
+   */
+  sharedRank?: number;
   /** For picks: how the source value was found, and the source key used. */
   via?: PickVia;
   viaKey?: string;
@@ -69,6 +88,9 @@ export interface Valuation {
   settings: LeagueSettings;
   generatedAt: string;
   reference: SourceId | null;
+  /** Normalization in effect for non-reference sources. */
+  method: NormalizationMethod;
+  /** Linear method: players used to fit each factor. */
   topN: number;
   /** Consensus value of the #1 overall asset (V_ref for the adjusted score). */
   vRef: number | null;
@@ -92,6 +114,7 @@ export interface BuildInput {
   results: SourceResult[];
   sleeperPlayers: readonly SleeperPlayer[] | null;
   topN?: number;
+  method?: NormalizationMethod;
   now?: Date;
 }
 
@@ -101,7 +124,14 @@ const PICK_FLAG: Record<PickVia, string | null> = {
   round: "round-level value (source has no tiers)",
 };
 
-export function buildValuation({ settings, results, sleeperPlayers, topN = DEFAULT_TOP_N, now = new Date() }: BuildInput): Valuation {
+export function buildValuation({
+  settings,
+  results,
+  sleeperPlayers,
+  topN = DEFAULT_TOP_N,
+  method = DEFAULT_NORMALIZATION,
+  now = new Date(),
+}: BuildInput): Valuation {
   const warnings: string[] = [];
   const ordered = [...results].sort((a, b) => SOURCE_ORDER.indexOf(a.adapter.id) - SOURCE_ORDER.indexOf(b.adapter.id));
 
@@ -133,19 +163,21 @@ export function buildValuation({ settings, results, sleeperPlayers, topN = DEFAU
     warnings.push(`${SOURCE_ORDER[0]} unavailable; values are on the ${ref.result.adapter.name} scale instead.`);
   }
 
-  // Scale factors against the reference.
-  const factors = new Map<SourceId, ReturnType<typeof computeScaleFactor>>();
+  // Fit each source onto the reference scale (players only; picks reuse the mapping).
+  const normalizers = new Map<SourceId, Normalizer>();
+  const overlaps = new Map<SourceId, number>();
   if (ref) {
     const refValues = new Map([...ref.players].map(([id, v]) => [id, v.rawValue]));
     for (const a of active) {
       const src = new Map([...a.players].map(([id, v]) => [id, v.rawValue]));
-      factors.set(a.result.adapter.id, a === ref ? { ...computeScaleFactor(refValues, src, topN), factor: 1 } : computeScaleFactor(refValues, src, topN));
+      const overlap = [...src.keys()].filter((id) => refValues.has(id)).length;
+      overlaps.set(a.result.adapter.id, overlap);
+      const n = a === ref ? referenceNormalizer(overlap) : fitNormalizer(refValues, src, method, { topN });
+      if (n) normalizers.set(a.result.adapter.id, n);
     }
   }
-  const usable = active.filter((a) => factors.get(a.result.adapter.id)?.factor != null);
-  for (const a of active) {
-    if (!usable.includes(a)) warnings.push(`${a.result.adapter.name}: no players in common with the reference; excluded.`);
-  }
+  const usable = active.filter((a) => normalizers.has(a.result.adapter.id));
+  const normalize = (a: Active, raw: number) => normalizers.get(a.result.adapter.id)!.apply(raw);
 
   // Which draft seasons are live: those the reference prices (its earliest onward).
   const seasonsOf = (a: Active) => [...a.picks.keys()].map((k) => parsePickKey(k)!.season);
@@ -169,8 +201,15 @@ export function buildValuation({ settings, results, sleeperPlayers, topN = DEFAU
       const v = a.players.get(id);
       if (!v) continue;
       fallback ??= v;
-      const factor = factors.get(a.result.adapter.id)!.factor!;
-      sources.push({ source: a.result.adapter.id, raw: v.rawValue, normalized: v.rawValue * factor, sourceName: v.sourceName, flags: [...a.support.approximated] });
+      const n = normalize(a, v.rawValue);
+      sources.push({
+        source: a.result.adapter.id,
+        raw: v.rawValue,
+        normalized: n.value,
+        ...(n.rank !== undefined ? { sharedRank: n.rank } : {}),
+        sourceName: v.sourceName,
+        flags: [...a.support.approximated],
+      });
     }
     const sp = directory.get(id);
     const c = consensus(sources.map((s) => s.normalized));
@@ -200,12 +239,13 @@ export function buildValuation({ settings, results, sleeperPlayers, topN = DEFAU
     for (const a of usable) {
       const hit = resolvePick((k) => a.picks.get(k), key, settings.numTeams);
       if (!hit) continue;
-      const factor = factors.get(a.result.adapter.id)!.factor!;
+      const n = normalize(a, hit.value.rawValue);
       const flag = PICK_FLAG[hit.via];
       sources.push({
         source: a.result.adapter.id,
         raw: hit.value.rawValue,
-        normalized: hit.value.rawValue * factor,
+        normalized: n.value,
+        ...(n.rank !== undefined ? { sharedRank: n.rank } : {}),
         sourceName: hit.value.sourceName,
         via: hit.via,
         viaKey: hit.key,
@@ -225,7 +265,7 @@ export function buildValuation({ settings, results, sleeperPlayers, topN = DEFAU
   const sources: SourceMeta[] = ordered.map((r) => {
     const support = supportById.get(r.adapter.id)!;
     const a = active.find((x) => x.result === r);
-    const f = factors.get(r.adapter.id);
+    const n = normalizers.get(r.adapter.id);
     const base = {
       id: r.adapter.id,
       name: r.adapter.name,
@@ -233,9 +273,7 @@ export function buildValuation({ settings, results, sleeperPlayers, topN = DEFAU
       supported: support.supported,
       approximated: support.approximated,
       isReference: a === ref && ref !== null,
-      factor: f?.factor ?? null,
-      overlap: f?.overlap ?? 0,
-      factorPlayers: f?.used ?? 0,
+      normalization: n ? { method: n.method, overlap: n.overlap, used: n.used, factor: n.factor } : null,
       players: r.load?.stats.players ?? 0,
       picks: r.load?.stats.picks ?? 0,
       matchedBy: r.load?.stats.matchedBy ?? {},
@@ -250,9 +288,13 @@ export function buildValuation({ settings, results, sleeperPlayers, topN = DEFAU
     let error = r.error ?? r.load?.error;
     if (!support.supported) status = "unsupported";
     else if (!r.load) status = "error";
-    else if (!f || f.factor === null) {
+    else if (!n) {
       status = "error";
-      error = "no players in common with the reference scale";
+      const overlap = overlaps.get(r.adapter.id) ?? 0;
+      error =
+        method === "rank" && overlap > 0
+          ? `only ${overlap} players in common with the reference scale (need ${MIN_SHARED})`
+          : "no players in common with the reference scale";
     } else status = r.load.from === "stale" ? "stale" : "ok";
     return { ...base, status, matchRate, pastSeasonPicks, ...(error ? { error } : {}) };
   });
@@ -262,6 +304,7 @@ export function buildValuation({ settings, results, sleeperPlayers, topN = DEFAU
     settings,
     generatedAt: now.toISOString(),
     reference: ref?.result.adapter.id ?? null,
+    method,
     topN,
     vRef: top?.value ?? null,
     vRefAsset: top?.id ?? null,
@@ -282,12 +325,17 @@ export async function loadSource(adapter: SourceAdapter, settings: LeagueSetting
   }
 }
 
+/** NORMALIZATION=linear restores the previous single-factor normalization. */
+export function normalizationFromEnv(): NormalizationMethod {
+  return process.env.NORMALIZATION === "linear" ? "linear" : DEFAULT_NORMALIZATION;
+}
+
 export async function getValuation(settings: LeagueSettings, adapters: SourceAdapter[] = enabledSources()): Promise<Valuation> {
   const [results, sleeper] = await Promise.all([
     Promise.all(adapters.map((a) => loadSource(a, settings))),
     fetchSleeperPlayers().catch(() => null),
   ]);
-  const valuation = buildValuation({ settings, results, sleeperPlayers: sleeper?.value ?? null });
+  const valuation = buildValuation({ settings, results, sleeperPlayers: sleeper?.value ?? null, method: normalizationFromEnv() });
   if (!sleeper) valuation.warnings.push("Sleeper player database unavailable; match rates and some names are missing.");
   return valuation;
 }

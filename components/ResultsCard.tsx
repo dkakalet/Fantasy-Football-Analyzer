@@ -1,6 +1,6 @@
 "use client";
 
-import { fmtValue } from "@/lib/format";
+import { fmtRank, fmtValue, normalizationLabel } from "@/lib/format";
 import { ALPHA_RANGE, DEFAULT_ALPHA, VERDICT_BANDS, verdictLabel, type MethodResult, type Side } from "@/lib/scoring";
 import type { TradeEvaluation, ValuedAsset } from "@/lib/trade";
 import type { Valuation } from "@/lib/valuation";
@@ -69,7 +69,7 @@ function MethodPanel({
   );
 }
 
-function SourceCell({ asset, source }: { asset: ValuedAsset; source: string }) {
+function SourceCell({ asset, source, shared }: { asset: ValuedAsset; source: string; shared: number }) {
   const s = asset.sources.find((x) => x.source === source);
   if (!s) return <td className="px-2 py-1.5 text-zinc-400">—</td>;
   return (
@@ -77,7 +77,13 @@ function SourceCell({ asset, source }: { asset: ValuedAsset; source: string }) {
       <div className="tabular-nums">
         {fmtValue(s.raw)} <span className="text-zinc-400">→</span> {fmtValue(s.normalized)}
       </div>
-      <div className="text-[10px] text-zinc-500" title={`Source name: ${s.sourceName}`}>
+      <div
+        className="text-[10px] text-zinc-500"
+        title={`Source name: ${s.sourceName}${
+          s.sharedRank !== undefined ? `\nRanks like ${fmtRank(s.sharedRank)} of the ${shared} players both sources list, so it gets the reference value at that rank` : ""
+        }`}
+      >
+        {s.sharedRank !== undefined ? `≈${fmtRank(s.sharedRank)} of ${shared} · ` : ""}
         {s.viaKey && s.viaKey !== asset.id && s.viaKey !== asset.valuedAs ? `${s.sourceName} · ` : ""}
         {s.flags.length ? `approx: ${s.flags.join(", ")}` : "exact"}
       </div>
@@ -100,7 +106,7 @@ function BreakdownTable({ evaluation, valuation, names }: { evaluation: TradeEva
             {sources.map((s) => (
               <th key={s.id} className="px-2 py-1.5 font-medium">
                 {s.name}
-                <div className="font-normal">raw → ×{fmtValue(s.factor, 3)}{s.isReference ? " (reference)" : ""}</div>
+                <div className="font-normal">{s.isReference ? "raw (reference scale)" : `raw → ${normalizationLabel(s.normalization)}`}</div>
               </th>
             ))}
             <th className="px-2 py-1.5 font-medium">Consensus</th>
@@ -114,7 +120,7 @@ function BreakdownTable({ evaluation, valuation, names }: { evaluation: TradeEva
                 <div className="text-[10px] text-zinc-500">{side}</div>
               </td>
               {sources.map((s) => (
-                <SourceCell key={s.id} asset={a} source={s.id} />
+                <SourceCell key={s.id} asset={a} source={s.id} shared={s.normalization?.used ?? 0} />
               ))}
               <td className="px-2 py-1.5 align-top tabular-nums">
                 {a.value === null ? (
@@ -213,13 +219,20 @@ export function ResultsCard({
         <summary className="cursor-pointer px-4 py-2 text-sm font-medium">How these numbers are computed</summary>
         <ul className="flex list-disc flex-col gap-1.5 border-t border-zinc-200 py-3 pr-4 pl-8 text-xs text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
           <li>
-            Scale: {reference?.name ?? "the first available source"} is the reference. Each other source is multiplied by Σ reference ÷ Σ source over
-            the top {valuation.topN} players both list
+            Scale: {reference?.name ?? "the first available source"} is the reference.{" "}
+            {valuation.method === "rank" ? (
+              <>
+                Every other source is <strong>rank-matched</strong> onto it. Among the players both list, the source&apos;s k-th highest value
+                becomes the reference&apos;s k-th highest value, and values in between are interpolated. Each source keeps its own ordering
+                (and where it puts picks among players); only the shape of its value curve is replaced.
+              </>
+            ) : (
+              <>Each other source is multiplied by Σ reference ÷ Σ source over the top {valuation.topN} players both list.</>
+            )}
             {valuation.sources
-              .filter((s) => !s.isReference && s.factor)
-              .map((s) => ` (${s.name}: ×${fmtValue(s.factor, 3)} from ${s.factorPlayers} players)`)
+              .filter((s) => !s.isReference && s.normalization)
+              .map((s) => ` ${s.name}: ${normalizationLabel(s.normalization)}.`)
               .join("")}
-            .
           </li>
           <li>Consensus value = median of the normalized values from the enabled sources that list the asset (two sources: their mean).</li>
           <li>

@@ -23,3 +23,20 @@ export function timeAgo(iso: string | null | undefined, now = Date.now()): strin
   const hrs = Math.round(mins / 60);
   return hrs < 48 ? `${hrs} h ago` : `${Math.round(hrs / 24)} d ago`;
 }
+
+export interface NormalizationInfo {
+  method: "reference" | "rank" | "linear";
+  used: number;
+  factor: number | null;
+}
+
+/** Short description of how a source was put on the reference scale. */
+export function normalizationLabel(n: NormalizationInfo | null): string {
+  if (!n) return "not normalized";
+  if (n.method === "reference") return "reference scale";
+  if (n.method === "linear") return `× ${fmtValue(n.factor, 3)} (top ${n.used} shared players)`;
+  return `rank-matched over ${n.used} shared players`;
+}
+
+/** "#4.6" style rank among shared players. */
+export const fmtRank = (rank: number) => `#${rank < 10 ? rank.toFixed(1).replace(/\.0$/, "") : Math.round(rank)}`;

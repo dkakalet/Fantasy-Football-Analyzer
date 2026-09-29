@@ -9,6 +9,7 @@
 //          --tep none|te+|te++ --alpha 1.0-2.0
 
 import { parsePickInput } from "../lib/picks";
+import { fmtRank, normalizationLabel } from "../lib/format";
 import { ALPHA_RANGE, DEFAULT_ALPHA, verdictLabel, type MethodResult } from "../lib/scoring";
 import { searchPlayers } from "../lib/search";
 import { parseSettings } from "../lib/settings";
@@ -40,10 +41,16 @@ function describeAsset(a: ValuedAsset, v: Valuation): string[] {
   if (a.value === null) return [`${head}: NO VALUE — not in any enabled source; excluded from totals`];
   const lines = [`${head}: consensus ${fmt(a.value)}${a.singleSource ? "  [single source]" : ""}${a.valuedAs ? `  [valued as ${a.valuedAs}]` : ""}`];
   for (const s of a.sources) {
-    const factor = v.sources.find((m) => m.id === s.source)?.factor ?? 1;
+    const n = v.sources.find((m) => m.id === s.source)?.normalization ?? null;
     const via = s.viaKey && s.viaKey !== a.id ? ` via ${s.viaKey}` : "";
     const flags = s.flags.length ? `  [approx: ${s.flags.join(", ")}]` : "";
-    lines.push(`      ${s.source.padEnd(15)} "${s.sourceName}"${via}: ${fmt(s.raw)} × ${fmt(factor, 3)} = ${fmt(s.normalized)}${flags}`);
+    const step =
+      n?.method === "linear"
+        ? `${fmt(s.raw)} × ${fmt(n.factor, 3)} = ${fmt(s.normalized)}`
+        : s.sharedRank !== undefined
+          ? `${fmt(s.raw)} → ${fmt(s.normalized)} (ranks like ${fmtRank(s.sharedRank)} of ${n?.used} shared)`
+          : fmt(s.raw);
+    lines.push(`      ${s.source.padEnd(15)} "${s.sourceName}"${via}: ${step}${flags}`);
   }
   return lines;
 }
@@ -98,7 +105,8 @@ async function main() {
   const lines = [
     `Settings: ${s.format}, ${s.numQbs === 2 ? "Superflex" : "1QB"}, ${s.ppr} PPR, ${s.numTeams} teams, TE premium ${s.tep}`,
     ...valuation.sources.map(
-      (m) => `  ${m.name}: ${m.status}${m.isReference ? " (reference scale)" : m.factor ? `, factor ${fmt(m.factor, 3)} over top ${m.factorPlayers} shared players` : ""}${m.approximated.length ? `, approx: ${m.approximated.join(", ")}` : ""}`,
+      (m) =>
+        `  ${m.name}: ${m.status}${m.normalization ? `, ${normalizationLabel(m.normalization)}` : ""}${m.approximated.length ? `, approx: ${m.approximated.join(", ")}` : ""}`,
     ),
     ...valuation.warnings.map((w) => `  warning: ${w}`),
     "",

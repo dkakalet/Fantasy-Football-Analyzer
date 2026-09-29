@@ -65,7 +65,8 @@ describe("valuation with three sources", () => {
     const results = await Promise.all([fc, dp, ktc].map((a) => loadSource(a, DEFAULT_SETTINGS)));
     const v = buildValuation({ settings: DEFAULT_SETTINGS, results, sleeperPlayers: sleeperPlayersFixture(), now: new Date(FIXTURE_TIME) });
     const ktcMeta = v.sources.find((s) => s.id === "ktc")!;
-    expect(ktcMeta).toMatchObject({ status: "ok", factorPlayers: 150 });
+    expect(ktcMeta).toMatchObject({ status: "ok", normalization: { method: "rank" } });
+    expect(ktcMeta.normalization!.used).toBeGreaterThan(150);
     const three = v.assets.find((a) => a.kind === "player" && a.sources.length === 3)!;
     const normalized = three.sources.map((s) => s.normalized).sort((a, b) => a - b);
     expect(three.value).toBe(normalized[1]);

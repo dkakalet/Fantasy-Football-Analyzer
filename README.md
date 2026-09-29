@@ -39,6 +39,7 @@ Copy `.env.example` to `.env.local` to change these. Nothing is required.
 | `ENABLE_KTC` | `false` | Turns on the KeepTradeCut adapter (scraping; **check KTC's terms first**) |
 | `ENABLE_ROSTERAUDIT` | `false` | Turns on RosterAudit (personal use; its terms forbid competing services) |
 | `DISABLE_SOURCES` | (empty) | Comma-separated default sources to turn off, e.g. `dynastydealer` |
+| `NORMALIZATION` | `rank` | `linear` restores the original single-factor normalization (see below) |
 | `FILE_CACHE` | on | Local JSON cache in `.cache/`. `0` disables it. Always off on Vercel. |
 
 ### CLI
@@ -51,7 +52,7 @@ npm run score -- "Josh Allen" vs "Jahmyr Gibbs" "2027 Early 1st" --qb 2 --ppr 1 
 Left of `vs` is what Team A gives. Picks can be keys (`2027-R1-EARLY`, `2027-1.04`) or
 labels (`2027 1st` defaults to Mid). Options: `--format dynasty|redraft --qb 1|2
 --ppr 0|0.5|1 --teams 8|10|12|14 --tep none|te+|te++ --alpha 1.0–2.0`. The output shows
-every source's raw value, scale factor, normalized value and flags for each asset.
+every source's raw value, normalized value (with its equivalent rank) and flags for each asset.
 
 ## How the numbers are made
 
@@ -65,9 +66,20 @@ per-source breakdown in the UI and the CLI shows each step.
    - DynastyProcess: `fp_id` → `db_playerids.csv` → `sleeper_id`, then normalized name + position.
    - Dynasty Dealer and RosterAudit: `sleeper_id` in the response.
    - KTC: `mflid` → crosswalk `mfl_id` → `sleeper_id`, then name.
-3. **Normalize** to FantasyCalc's scale: `factor = Σ ref ÷ Σ source` over the top N = 150
-   players (ranked by FantasyCalc value) that both list. Picks use the same factor. If
-   FantasyCalc is down, the next source becomes the reference and the UI says so.
+3. **Normalize** to FantasyCalc's scale by **rank matching** (`lib/normalize.ts`):
+   - Take the players both sources list (typically 320–390).
+   - Sort each source's values for those players on its own. The source's k-th highest value
+     maps to FantasyCalc's k-th highest value.
+   - Values in between are interpolated linearly. Values beyond either end are scaled
+     proportionally from the nearest end. Tied source values share the average.
+   - Picks go through the same mapping. A pick a source values like its #40 shared player
+     gets FantasyCalc's #40 value.
+   - Each source keeps its own ordering, and its view of where picks sit among players. Only
+     the shape of its value curve is replaced.
+   - The breakdown shows the equivalent rank (e.g. `≈#4.6 of 320`) next to each normalized
+     value.
+   - A source needs at least 20 shared players to be calibrated. If FantasyCalc is down, the
+     next source becomes the reference and the UI says so.
 4. **Consensus** = median of the normalized values from the sources that list the asset
    (with two sources, that's the mean). One source → that value, flagged *single source*.
    None → **no value**: shown with a warning, left out of totals, never counted as 0.
@@ -162,6 +174,45 @@ Captured 2026-09-25 (Dynasty Dealer and RosterAudit on 2026-09-29); details in
   - No endpoint states the tradable pick window. Live leagues showed three future seasons, so
     that is a constant (`FUTURE_PICK_SEASONS`).
 
+### What changed in normalization (2026-09-29)
+
+**Before:** one linear factor per source, `Σ FantasyCalc ÷ Σ source` over the top 150 shared
+players. **After:** rank matching (above). `NORMALIZATION=linear` switches back.
+
+Why: a single factor can only fix a source's overall size, not the shape of its curve. On
+live data, the median gap between each source's normalized value and FantasyCalc's, by
+FantasyCalc rank tier (1QB, Sept 29):
+
+| Source | Method | #1–12 | #13–36 | #37–100 | #101–200 | Median error, top 200 |
+| --- | --- | --- | --- | --- | --- | --- |
+| DynastyProcess | linear | +14% | +36% | −5% | **−76%** | 55% |
+| | rank | −6% | +2% | +1% | −5% | 18% |
+| Dynasty Dealer | linear | **−35%** | −15% | +12% | +35% | 30% |
+| | rank | −8% | −15% | −8% | −6% | 14% |
+| RosterAudit | linear | +16% | +14% | +4% | **−64%** | 23% |
+| | rank | 0% | 0% | 0% | −1% | 6% |
+| KeepTradeCut | linear | **−36%** | −14% | +12% | +54% | 34% |
+| | rank | 0% | 0% | +2% | −1% | 7% |
+
+A two-parameter power curve (`a·v^b`) was also tested. It beat linear but missed badly at the
+top (−25% to −38% on DynastyProcess and RosterAudit for #1–12).
+
+Effect on consensus values (default sources FantasyCalc + DynastyProcess + Dynasty Dealer, 1QB):
+
+| Asset | Before | After | Why |
+| --- | --- | --- | --- |
+| Jahmyr Gibbs | 9,720 | 10,671 | Dynasty Dealer's elite players no longer read at ~5,500 |
+| Bijan Robinson | 10,093 | 9,941 | |
+| Travis Kelce (DynastyProcess's value) | 360 | 1,326 | linear crushed DynastyProcess's depth |
+| 2027 1st (Early) | 4,317 | 4,695 | |
+| 2027 3rd (Mid) | 978 | 389 | Dynasty Dealer's flat curve was inflating late picks |
+| 2027 4th (Mid) | 743 | 183 | same |
+| 2028 1st (Mid) | 2,087 | 2,174 | |
+
+Most trades of starters and early picks barely move (Chase for Bijan + a 2027 1st: 59.9 →
+59.6). Trades built on late-round picks now lean further against the side receiving them
+(Bowers for Rice + a 2nd + a 3rd: 47.7 "Fair" → 44.7 "Slight edge").
+
 ### Sources evaluated but not added (2026-09-29)
 
 | Source | Why not |
@@ -182,13 +233,13 @@ Captured 2026-09-25 (Dynasty Dealer and RosterAudit on 2026-09-29); details in
   540 on FantasyCalc and about 9,700 on DynastyProcess after normalization. With three or more
   sources the median sets the extremes aside. Check the breakdown before
   trusting any single number.
-- **Flatter value curves read low at the top.** Dynasty Dealer rates depth players close to
-  stars, so its factor over the top 150 is about 0.56. Its elite players then normalize to
-  roughly half of the other sources (Ja'Marr Chase ≈ 5,300 vs 8,800–10,800), while depth
-  players read high. With four sources the median usually sets it aside.
-- **KTC's values top out at 9,999**, so one linear factor makes its elite players read low
-  (e.g. Josh Allen ≈ 7,150 vs 11,056 on FantasyCalc in superflex). The median limits the effect
-  with three sources. A non-linear mapping would be a formula change and is not implemented.
+- **Rank matching trusts each source's ordering.** Dynasty Dealer's dynasty list is one blended
+  1QB/Superflex market, so in 1QB leagues its QBs rank too high: it has Josh Allen at #1
+  overall, which maps to about 11,000 against 5,900 on FantasyCalc. That's why it's flagged
+  approx for QB format. With three or more sources the median sets it aside.
+- **Late-round picks depend on how deep each source's list goes.** DynastyProcess and Dynasty
+  Dealer value 3rds and 4ths like their #300+ players, which maps to FantasyCalc's small deep
+  values. FantasyCalc itself values them higher.
 - **TE premium mapping** is our assumption; neither FantasyCalc nor this app defines TE+/TE++
   numerically. Sleeper `bonus_rec_te` below 0.75 → TE+ (KTC `tep`); 0.75 and up → TE++ (KTC `tepp`).
 - **Redraft:** FantasyCalc and Dynasty Dealer apply (DynastyProcess, RosterAudit and KTC are
